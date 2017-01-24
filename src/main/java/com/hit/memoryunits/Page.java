@@ -1,17 +1,15 @@
 package com.hit.memoryunits;
 
-import java.util.Arrays;
-
 public class Page<T> implements java.io.Serializable {
 
 	private T _content;
 	private java.lang.Long _id;
 	
 	
-	public Page(java.lang.Long id,
-            T content) {
-		_id = id;
-		_content = content;
+	public Page(Long id,
+            	T content) {
+		this.setPageId(id);
+		this.setContent(content);
 	}
 	
 	public java.lang.Long getPageId() {

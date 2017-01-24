@@ -13,7 +13,7 @@ public class MemoryManagementUnit {
 	private IAlgoCache<java.lang.Long, java.lang.Long> _algo;
 	
 	public MemoryManagementUnit(int ramCapacity,
-            com.hit.algorithm.IAlgoCache<java.lang.Long, java.lang.Long> algo) {
+            					IAlgoCache<Long, Long> algo) {
 		if(ramCapacity > 0) {
 			_RAM = new RAM(ramCapacity);
 		}
@@ -36,8 +36,7 @@ public class MemoryManagementUnit {
 //	Throws:
 //		java.io.IOException
 //		ClassNotFoundException
-	@SuppressWarnings("unchecked")
-	public Page<byte[]>[] getPages(java.lang.Long[] pageIds)
+	public List<Page<byte[]>> getPages(java.lang.Long[] pageIds)
             throws java.io.IOException, ClassNotFoundException {
 		Long currentPresentPageID, currentRequestedPageID;
 		Long currentMissingPageID, currentKeyToReplace; 
@@ -95,6 +94,6 @@ public class MemoryManagementUnit {
 				}
 			}
 		} 
-		return (Page<byte[]>[]) pagesToReturn.toArray(new Page[1]);
+		return pagesToReturn;
 	}
 }
