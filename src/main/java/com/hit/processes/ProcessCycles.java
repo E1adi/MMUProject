@@ -1,5 +1,32 @@
 package com.hit.processes;
 
-public class ProcessCycles {
+import java.util.List;
 
+public class ProcessCycles {
+	
+	private List<ProcessCycle> processCycles;
+
+//	This constructor represents a Processes Cycle constructor, which gets a list of Process Cycle and set it as his member.
+//	Parameters:
+//		processCycles - List of ProcessCycle to set as member.
+	public ProcessCycles(List<ProcessCycle> processCycles) {
+		this.setProcessCycles(processCycles);
+	}
+	
+//	Returns:
+//		ProcessCycle list.
+	public List<ProcessCycle> getProcessCycles() {
+		return processCycles;
+	}
+	
+//	Parameters:
+//		processCycles - ProcessCycle list to set.
+	public void setProcessCycles(List<ProcessCycle> processCycles) {
+		this.processCycles = processCycles;
+	}
+	
+//	Overriding Object toString.
+	public String toString() {
+		return processCycles.toString();
+	}
 }

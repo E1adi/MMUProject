@@ -14,11 +14,11 @@ public class RAM {
 	public RAM(int initialCapacity) {
 		if(initialCapacity > 0) {
 			_capacity = initialCapacity;
-			_memory = new HashMap<java.lang.Long,Page<byte[]>>(initialCapacity);
+			_memory = new HashMap<Long,Page<byte[]>>(initialCapacity);
 		}
 		else {
 			_capacity = Constants.virtualMemoryDefaultSize;
-			_memory = new HashMap<java.lang.Long,Page<byte[]>>(Constants.virtualMemoryDefaultSize);
+			_memory = new HashMap<Long,Page<byte[]>>(Constants.virtualMemoryDefaultSize);
 		}
 	}
 	
@@ -79,10 +79,13 @@ public class RAM {
 	}	
 	
 	public void setInitialCapacity(int initialCapacity) {
-		_capacity = initialCapacity;
-		Map<Long, Page<byte[]>> temp = this.getPages();
-		_memory = new HashMap<Long, Page<byte[]>>(_capacity);
-		_memory.putAll(temp);
+		Map<Long, Page<byte[]>> temp;
+		if(initialCapacity >= 0) {
+			_capacity = initialCapacity;
+			temp = this.getPages();
+			_memory = new HashMap<Long, Page<byte[]>>(_capacity);
+			_memory.putAll(temp);
+		}
 	}
 	
 	public int getInitialCapacity() {
