@@ -22,9 +22,7 @@ public class ProcessCycles {
 //	Parameters:
 //		processCycles - ProcessCycle list to set.
 	public void setProcessCycles(List<ProcessCycle> processCycles) {
-		if(processCycles != null) {
-			this.processCycles = processCycles;
-		}
+		this.processCycles = processCycles;
 	}
 	
 //	Overriding Object toString.

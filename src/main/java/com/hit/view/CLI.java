@@ -4,6 +4,8 @@ package com.hit.view;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
+import com.hit.algorithm.IAlgoCache;
+
 public class CLI {
 
 	private Scanner in;
@@ -20,11 +22,15 @@ public class CLI {
 	}
 	
 	public String[] getConfiguration() {
-		String userInput;
+		String userInput, requestedAlgorithm = null;
+		boolean invalidInput = true;
+		String[] splitedUserInput;
+		Integer ramCapacity = null;
+		
 		write("Please write start to start");
 		userInput = read();
-		while(userInput.toLowerCase() != "start") {
-			if(userInput.toLowerCase() == "stop") {
+		while(!userInput.toLowerCase().equals("start")) {
+			if(userInput.toLowerCase().equals("stop")) {
 				write("There is notheing to stop at the moment, the MMU is not running.");
 				write("Please write start to start.");
 			}
@@ -33,8 +39,53 @@ public class CLI {
 			}
 			userInput = read();
 		}
+		do {
+			invalidInput = true;
+			write("Please insert required algorithm and RAM capacity.");
+			write("Allowed algorithms are: LRU, MFU, MRU and Second Chance.");
+			userInput = read();
+			splitedUserInput = userInput.split(" ");
+			if(splitedUserInput[0].toLowerCase().equals("second")) {
+				if(splitedUserInput.length > 3) {
+					write("Invalid input, too many arguments.");
+					continue;
+				}
+				if(splitedUserInput[1].toLowerCase().equals("chance")) {
+					requestedAlgorithm = new String("Second Chance");
+				}
+				else {
+					write("Invalid algorithm.");
+					continue;
+				}
+			}
+			else {
+				if(splitedUserInput.length > 2) {
+					write("Invalid input, too many arguments.");
+					continue;
+				}
+				requestedAlgorithm = splitedUserInput[0].toUpperCase();
+			}
+			if(!requestedAlgorithm.equals("LRU") && !requestedAlgorithm.equals("MFU") && !requestedAlgorithm.equals("MRU") && !requestedAlgorithm.equals("Second Chance")) {
+				write("Invalid algorithm.");
+				continue;
+			}
+			try {
+				ramCapacity = Integer.parseInt(splitedUserInput[splitedUserInput.length-1]);
+				if(ramCapacity < 1) {
+					write("Invalid RAM capacity.");
+					continue;
+				}
+				invalidInput = false;
+			} catch(NumberFormatException e) {
+				write("Invalid RAM capacity.");
+				continue;
+			}
+		} while (invalidInput);
 		
+		return new String[]{requestedAlgorithm, ramCapacity.toString()};
 	}
+	
+
 	
 	public void write(String string) {
 		out.println(string);

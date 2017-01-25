@@ -19,7 +19,7 @@ public class Process implements Runnable{
 //		id - of the process.
 //		mmu - reference to the MMU object.
 //		processCycles - process cycles configuration.
-	Process(int id, 
+	public Process(int id, 
 			MemoryManagementUnit mmu, 
 			ProcessCycles processCycles) {
 		this.setId(id);
@@ -53,29 +53,43 @@ public class Process implements Runnable{
 		List<Page<byte[]>> pagesFromMemory = null;
 		Iterator<Page<byte[]>> pagesIter;
 		Iterator<byte[]> dataIter;
+		int i = 0;
+		boolean[] writePages;
+		
 		
 		for(ProcessCycle pc : processCycles.getProcessCycles()) {
-			sleepMs = pc.getSleepMs();
-			try {
-				pagesFromMemory = mmu.getPages((Long[])pc.getPages().toArray());
-			} catch (ClassNotFoundException | IOException e1) {
-				
+			
+			writePages = new boolean[pc.getPages().size()];
+			for(byte[] data : pc.getData()) {
+				if(data != null)
+					writePages[i] = true;
+				i++;
 			}
-			pagesIter = pagesFromMemory.iterator();
-			dataIter = pc.getData().iterator();
-			Page<byte[]> page;
-			byte[] data;
-			while(pagesIter.hasNext() && dataIter.hasNext()) {
-				page = pagesIter.next();
-				data = dataIter.next();
-				page.setContent(data);
+			
+			
+			sleepMs = pc.getSleepMs();
+			synchronized(mmu) {
+				try {
+					pagesFromMemory = mmu.getPages((Long[])pc.getPages().toArray(), writePages);
+				} catch (ClassNotFoundException | IOException e1) {
+					e1.printStackTrace();
+				}
+				pagesIter = pagesFromMemory.iterator();
+				dataIter = pc.getData().iterator();
+				Page<byte[]> page;
+				byte[] data;
+				while(pagesIter.hasNext() && dataIter.hasNext()) {
+					page = pagesIter.next();
+					data = dataIter.next();
+					if(data == null)
+						continue;
+					page.setContent(data);
+				}
 			}
 			try {
 				Thread.sleep(sleepMs);
 			} catch (InterruptedException e) {}
 		}
-		
-		
 	}
 
 }

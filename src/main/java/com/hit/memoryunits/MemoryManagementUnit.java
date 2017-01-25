@@ -36,64 +36,81 @@ public class MemoryManagementUnit {
 //	Throws:
 //		java.io.IOException
 //		ClassNotFoundException
-	public List<Page<byte[]>> getPages(java.lang.Long[] pageIds)
+	public List<Page<byte[]>> getPages(Long[] pageIds, boolean[] writePages)
             throws java.io.IOException, ClassNotFoundException {
-		Long currentPresentPageID, currentRequestedPageID;
+		int readWriteIndex = 0;
 		Long currentMissingPageID, currentKeyToReplace; 
 		Page<byte[]> pageToRam;
 		HardDisk hd = HardDisk.getInstance();
 		List<Long> requestedPages = Arrays.asList(pageIds);
-		List<Long> presentPagesInMemory, keysToReplace = null;
-		List<Long> missingPagesInMemory = new ArrayList<Long>();	
+		List<Long> presentPagesInMemory, keysToReplace = null, pagesToCheckBeforReturning = new ArrayList<Long>(); 
+		List<Long> missingPagesInMemoryForWrite = new ArrayList<Long>();
+		List<Long> missingPagesInMemoryForRead = new ArrayList<Long>();
 		List<Page<byte[]>> pagesToReturn = new ArrayList<Page<byte[]>>();
 		
+		for(Long pageId: requestedPages) {
+			if(writePages[readWriteIndex])
+				pagesToCheckBeforReturning.add(pageId);
+			readWriteIndex++;
+		}
+		readWriteIndex = 0;
+		
 		presentPagesInMemory = _algo.getElement(Arrays.asList(pageIds));
-		if((presentPagesInMemory != null)) {
-			Iterator<Long> presentPagesIterator = presentPagesInMemory.iterator();
-			Iterator<Long> requestedPagesIterator = requestedPages.iterator();
-			while(presentPagesIterator.hasNext() && requestedPagesIterator.hasNext()) {
-				currentPresentPageID = presentPagesIterator.next();
-				currentRequestedPageID = requestedPagesIterator.next();
-				if(currentPresentPageID == null) {
-					missingPagesInMemory.add(currentRequestedPageID);
-				}
-				else {
-					pagesToReturn.add(_RAM.getPage(currentPresentPageID));
-				}
-			}
-		}
-		else {
-			missingPagesInMemory.addAll(Arrays.asList(pageIds));
-		}
-		if(missingPagesInMemory.size() > 0) {
-			keysToReplace = _algo.putElement(missingPagesInMemory, missingPagesInMemory);
-			if(keysToReplace != null) {
-				Iterator<Long> missingPagesIterator = missingPagesInMemory.iterator();
-				Iterator<Long> keysToReplaceIterator = keysToReplace.iterator();
-				while(missingPagesIterator.hasNext() && keysToReplaceIterator.hasNext()) {
-					currentMissingPageID = missingPagesIterator.next();
-					currentKeyToReplace = keysToReplaceIterator.next();
-					if(currentKeyToReplace != null) {
-						pageToRam = hd.pageReplacement(_RAM.getPage(currentKeyToReplace), currentMissingPageID);
-						_RAM.removePage(_RAM.getPage(currentKeyToReplace));
-						_RAM.addPage(pageToRam);
-						pagesToReturn.add(pageToRam);
-					}
-					else {
-						pageToRam = hd.pageFault(currentMissingPageID);
-						_RAM.addPage(pageToRam);
-						pagesToReturn.add(pageToRam);
-					}
+		Iterator<Long> presentPagesIterator = presentPagesInMemory.iterator();
+		Iterator<Long> requestedPagesIterator = requestedPages.iterator();
+		Long currentRequestedPageID, currentPresentPageID;
+		while(presentPagesIterator.hasNext() && requestedPagesIterator.hasNext()) {
+			currentPresentPageID = presentPagesIterator.next();
+			currentRequestedPageID = requestedPagesIterator.next();
+			if(currentPresentPageID == null) {											// If page is not in memory
+				if(writePages[readWriteIndex]) {										// If that page is for writing
+					missingPagesInMemoryForWrite.add(currentRequestedPageID);			// Add it to missingPagesForWrite list.			
+				}																		//
+				else {																	// Otherwise
+					missingPagesInMemoryForRead.add(currentRequestedPageID);			// Add it to missingPagesForRead list.
 				}
 			}
-			else {
-				for(Long pageId: missingPagesInMemory) {
-					pageToRam = hd.pageFault(pageId);
+			else if (!writePages[readWriteIndex]){										// If this page is already in memory,
+				pagesToReturn.add(_RAM.getPage(currentRequestedPageID));				// Push it to result list as it don't need to be in ram, it is for read only.
+			}
+			readWriteIndex++;
+		}
+		
+		
+		if(missingPagesInMemoryForRead.size() > 0) {									// Inserting pages for read only directly from HD.
+			for(Long pageId: missingPagesInMemoryForRead)
+				pagesToReturn.add(hd.pageFault(pageId));
+		}
+		
+		
+		if(missingPagesInMemoryForWrite.size() > 0) {														// If there are Pages for writing that missing in memory
+			keysToReplace = _algo.putElement(missingPagesInMemoryForWrite, missingPagesInMemoryForWrite);	// Consult with algo which page to replace
+			Iterator<Long> missingPagesIterator = missingPagesInMemoryForWrite.iterator();
+			Iterator<Long> keysToReplaceIterator = keysToReplace.iterator();
+			while(missingPagesIterator.hasNext() && keysToReplaceIterator.hasNext()) {						// Iterating over missing pages for write purpose.
+				currentMissingPageID = missingPagesIterator.next();
+				currentKeyToReplace = keysToReplaceIterator.next();
+				if(currentKeyToReplace != null) {															// If algo says that a page should be replaced 
+					pageToRam = hd.pageReplacement(_RAM.getPage(currentKeyToReplace), currentMissingPageID);// Replace that page and insert new page to RAM.
+					_RAM.removePage(_RAM.getPage(currentKeyToReplace));
 					_RAM.addPage(pageToRam);
-					pagesToReturn.add(pageToRam);
+				}
+				else {																						// If algo says that no page should be replaces, just push new page to RAM.
+					pageToRam = hd.pageFault(currentMissingPageID);
+					_RAM.addPage(pageToRam);
 				}
 			}
-		} 
-		return pagesToReturn;
+		}
+		
+		for(Long pageId : _algo.getElement(pagesToCheckBeforReturning)) {									// Checking if all pages with writing purpose are in RAM. 
+			if(pageId == null)																				// If not we choose a bad algorithm.
+				System.out.println("Bad Algorithm");
+		}
+		
+		for(Long pageId : pagesToCheckBeforReturning) {														// Adds all pages for writing purpose to return list.
+			pagesToReturn.add(_RAM.getPage(pageId));
+		}
+		
+		return pagesToReturn;																				// return all found pages.
 	}
 }

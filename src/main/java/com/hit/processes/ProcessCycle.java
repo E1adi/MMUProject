@@ -1,7 +1,5 @@
 package com.hit.processes;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ProcessCycle {
@@ -18,17 +16,9 @@ public class ProcessCycle {
 	public ProcessCycle(List<Long> pages,
             			int sleepMs,
             			List<byte[]> data) {
-		if(pages != null)
-			this.pages = pages;
-		else
-			this.pages = new ArrayList<Long>();
-		
-		this.sleepMs = sleepMs;
-		
-		if(data != null)
-			this.data = data;
-		else
-			this.data = new ArrayList<byte[]>();
+		this.setPages(pages);
+		this.setData(data);
+		this.setSleepMs(sleepMs);
 	}
 	
 //	Returns:
@@ -40,8 +30,7 @@ public class ProcessCycle {
 //	Parameters:
 //		pages - the pages to set.
 	public void setPages(List<Long> pages) {
-		if (pages != null)
-			this.pages = pages;
+		this.pages = pages;
 	}
 	
 //	Returns:
@@ -52,8 +41,7 @@ public class ProcessCycle {
 //	Parameters:
 //		sleepMS - sleep time in milliseconds.
 	public void setSleepMs(int sleepMs) {
-		if(sleepMs >= 0)
-			this.sleepMs = sleepMs;
+		this.sleepMs = sleepMs;
 	}
 	
 //	Returns:
@@ -65,7 +53,6 @@ public class ProcessCycle {
 //	Parameters:
 //		data to be set.
 	public void setData(java.util.List<byte[]> data) {
-		if(data != null)
 			this.data = data;
 	}
 	

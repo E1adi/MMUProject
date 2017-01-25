@@ -4,24 +4,28 @@ import java.util.List;
 
 public class RunConfiguration {
 
-	private List<ProcessCycles> processesCycles;
+	private List<ProcessCycles> processCycles;
 	
-	public RunConfiguration(List<ProcessCycles> processesCycles) {
-		this.setProcessesCycles(processesCycles);
+	public RunConfiguration(List<ProcessCycles> processCycles) {
+		this.setProcessesCycles(processCycles);
 	}
 	
 //	Returns:
 //		the processesCycles
 	public List<ProcessCycles> getProcessesCycles() {
-		return processesCycles;
+		return processCycles;
 	}
 	
 	
 //	Parameters:
 //		processesCycles - the processesCycles to set
-	public void setProcessesCycles(List<ProcessCycles> processesCycles) {
-		if(processesCycles != null) {
-			this.processesCycles = processesCycles;
-		}
+	public void setProcessesCycles(List<ProcessCycles> processCycles) {
+		this.processCycles = processCycles;
+	}
+	
+	@Override
+	public String toString()
+	{
+		return processCycles.toArray().toString();
 	}
 }
