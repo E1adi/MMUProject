@@ -53,24 +53,24 @@ public class Process implements Runnable{
 		List<Page<byte[]>> pagesFromMemory = null;
 		Iterator<Page<byte[]>> pagesIter;
 		Iterator<byte[]> dataIter;
-		int i = 0;
-		boolean[] writePages;
 		
 		
 		for(ProcessCycle pc : processCycles.getProcessCycles()) {
 			
-			writePages = new boolean[pc.getPages().size()];
-			for(byte[] data : pc.getData()) {
-				if(data != null)
-					writePages[i] = true;
-				i++;
-			}
+			boolean writePages[] = new boolean[pc.getData().size()];
 			
+			int index = 0;
+			for (byte[] data : pc.getData()) 
+			{
+				if(data != null)
+					writePages[index] = true;
+				index++;;
+			}
 			
 			sleepMs = pc.getSleepMs();
 			synchronized(mmu) {
 				try {
-					pagesFromMemory = mmu.getPages((Long[])pc.getPages().toArray(), writePages);
+					pagesFromMemory = mmu.getPages(pc.getPages().toArray(new Long[1]), writePages);
 				} catch (ClassNotFoundException | IOException e1) {
 					e1.printStackTrace();
 				}

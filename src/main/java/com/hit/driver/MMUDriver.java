@@ -35,8 +35,10 @@ public class MMUDriver {
 		RunConfiguration runConfiguration;
 		List<Process> processesList;
 		
+		while(true) {
 		CLI cli = new CLI(System.in, System.out);
 		String[] configuration = cli.getConfiguration();
+		cli.write("Processing...");
 		capacity = Integer.parseInt(configuration[1]);
 		
 		cacheAlgo = algorithmsFactory(configuration[0], capacity);
@@ -47,7 +49,9 @@ public class MMUDriver {
 		processesList = processesCreator(runConfiguration, mmu);
 		
 		runProcesses(processesList);
-		
+		cli.write("Done.");
+		}
+
 	}
 	
 	private static void runProcesses(List<Process> processesList) {

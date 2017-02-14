@@ -4,8 +4,6 @@ package com.hit.view;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
-import com.hit.algorithm.IAlgoCache;
-
 public class CLI {
 
 	private Scanner in;
@@ -27,12 +25,12 @@ public class CLI {
 		String[] splitedUserInput;
 		Integer ramCapacity = null;
 		
-		write("Please write start to start");
+		write("Please write start to start or stop to exit");
 		userInput = read();
 		while(!userInput.toLowerCase().equals("start")) {
 			if(userInput.toLowerCase().equals("stop")) {
-				write("There is notheing to stop at the moment, the MMU is not running.");
-				write("Please write start to start.");
+				write("Thank you.");
+				System.exit(0);
 			}
 			else { 
 				write("Not a valid commnad, Please try again.");
