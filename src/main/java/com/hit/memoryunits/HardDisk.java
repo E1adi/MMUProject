@@ -23,6 +23,7 @@ public class HardDisk {
 		_SIZE = Constants.HardDiskSize;
 		DEFAULT_FILE_NAME = Constants.HardDiskDefaultFileName;
 		File hdFile = new File(DEFAULT_FILE_NAME);
+		
 		if(hdFile.exists()) {
 			ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(DEFAULT_FILE_NAME));
 			try {
@@ -35,6 +36,7 @@ public class HardDisk {
 				inputStream.close();
 			}
 		}
+		
 		else {
 			hdFile.createNewFile();
 			_hardDiskContent = new HashMap<Long, Page<byte[]>>(_SIZE);

@@ -1,7 +1,7 @@
 package com.hit.memoryunits;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +42,7 @@ public class RAM {
 	
 	@SuppressWarnings("unchecked")
 	public Page<byte[]>[] getPages(java.lang.Long[] pageIds) {
-		List<Page<byte[]>> returnValues = new ArrayList<Page<byte[]>>();
+		List<Page<byte[]>> returnValues = new LinkedList<Page<byte[]>>();
 		for(Long id: pageIds) {
 			if(id != null) {
 				if(_memory.containsKey(id)) {

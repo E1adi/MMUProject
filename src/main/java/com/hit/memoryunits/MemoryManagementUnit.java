@@ -1,8 +1,8 @@
 package com.hit.memoryunits;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import com.hit.algorithm.IAlgoCache;
@@ -43,10 +43,10 @@ public class MemoryManagementUnit {
 		Page<byte[]> pageToRam;
 		HardDisk hd = HardDisk.getInstance();
 		List<Long> requestedPages = Arrays.asList(pageIds);
-		List<Long> presentPagesInMemory, keysToReplace = null, pagesToCheckBeforReturning = new ArrayList<Long>(); 
-		List<Long> missingPagesInMemoryForWrite = new ArrayList<Long>();
-		List<Long> missingPagesInMemoryForRead = new ArrayList<Long>();
-		List<Page<byte[]>> pagesToReturn = new ArrayList<Page<byte[]>>();
+		List<Long> presentPagesInMemory, keysToReplace = null, pagesToCheckBeforReturning = new LinkedList<Long>(); 
+		List<Long> missingPagesInMemoryForWrite = new LinkedList<Long>();
+		List<Long> missingPagesInMemoryForRead = new LinkedList<Long>();
+		List<Page<byte[]>> pagesToReturn = new LinkedList<Page<byte[]>>();
 		
 		for(Long pageId: requestedPages) {
 			if(writePages[readWriteIndex])

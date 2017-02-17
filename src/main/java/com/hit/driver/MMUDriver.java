@@ -36,20 +36,20 @@ public class MMUDriver {
 		List<Process> processesList;
 		
 		while(true) {
-		CLI cli = new CLI(System.in, System.out);
-		String[] configuration = cli.getConfiguration();
-		cli.write("Processing...");
-		capacity = Integer.parseInt(configuration[1]);
-		
-		cacheAlgo = algorithmsFactory(configuration[0], capacity);
-		mmu = new MemoryManagementUnit(capacity, cacheAlgo);
-		
-		runConfiguration = readConfigurationFile();
-		
-		processesList = processesCreator(runConfiguration, mmu);
-		
-		runProcesses(processesList);
-		cli.write("Done.");
+			CLI cli = new CLI(System.in, System.out);
+			String[] configuration = cli.getConfiguration();
+			cli.write("Processing...");
+			capacity = Integer.parseInt(configuration[1]);
+			
+			cacheAlgo = algorithmsFactory(configuration[0], capacity);
+			mmu = new MemoryManagementUnit(capacity, cacheAlgo);
+			
+			runConfiguration = readConfigurationFile();
+			
+			processesList = processesCreator(runConfiguration, mmu);
+			
+			runProcesses(processesList);
+			cli.write("Done.");
 		}
 
 	}
