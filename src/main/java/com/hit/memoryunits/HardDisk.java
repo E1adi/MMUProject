@@ -9,6 +9,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+
+import com.hit.util.MMULogger;
 
 public class HardDisk {
 	
@@ -70,6 +73,10 @@ public class HardDisk {
 	public Page<byte[]> pageFault(java.lang.Long pageId) throws java.io.FileNotFoundException,
                    	   											java.io.IOException, 
                    	   											ClassNotFoundException {
+		
+		MMULogger logger = MMULogger.getInstance();
+		logger.write("PF:" + pageId.toString() + System.lineSeparator(), Level.INFO);
+		
 		ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(DEFAULT_FILE_NAME));
 		try {
 			_hardDiskContent = (HashMap<java.lang.Long, Page<byte[]>>)inputStream.readObject();
@@ -95,6 +102,9 @@ public class HardDisk {
 	public Page<byte[]> pageReplacement(Page<byte[]> moveToHdPage,
             							java.lang.Long moveToRamId)	throws java.io.FileNotFoundException,
             															   java.io.IOException, ClassNotFoundException {
+		
+		MMULogger logger = MMULogger.getInstance();
+		logger.write("PR:MTH " + moveToHdPage.getPageId().toString() + "MTR " + moveToRamId.toString() + System.lineSeparator(), Level.INFO);
 		
 		ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(DEFAULT_FILE_NAME));
 		ObjectOutputStream outputStream = null;

@@ -38,6 +38,7 @@ public class MemoryManagementUnit {
 //		ClassNotFoundException
 	public List<Page<byte[]>> getPages(Long[] pageIds, boolean[] writePages)
             throws java.io.IOException, ClassNotFoundException {
+		
 		int readWriteIndex = 0;
 		Long currentMissingPageID, currentKeyToReplace; 
 		Page<byte[]> pageToRam;

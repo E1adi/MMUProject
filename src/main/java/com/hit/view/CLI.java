@@ -4,6 +4,8 @@ package com.hit.view;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
+import com.hit.util.MMULogger;
+
 public class CLI {
 
 	private Scanner in;
@@ -30,6 +32,8 @@ public class CLI {
 		while(!userInput.toLowerCase().equals("start")) {
 			if(userInput.toLowerCase().equals("stop")) {
 				write("Thank you.");
+				MMULogger logger = MMULogger.getInstance();
+				logger.close();
 				System.exit(0);
 			}
 			else { 
@@ -63,7 +67,11 @@ public class CLI {
 				}
 				requestedAlgorithm = splitedUserInput[0].toUpperCase();
 			}
-			if(!requestedAlgorithm.equals("LRU") && !requestedAlgorithm.equals("MFU") && !requestedAlgorithm.equals("MRU") && !requestedAlgorithm.equals("Second Chance")) {
+			if(!requestedAlgorithm.equals("LRU") && 
+			   !requestedAlgorithm.equals("MFU") && 
+			   !requestedAlgorithm.equals("MRU") && 
+			   !requestedAlgorithm.equals("Second Chance")) {
+				
 				write("Invalid algorithm.");
 				continue;
 			}
@@ -81,7 +89,7 @@ public class CLI {
 		} while (invalidInput);
 		
 		return new String[]{requestedAlgorithm, ramCapacity.toString()};
-	}
+	}	
 	
 
 	

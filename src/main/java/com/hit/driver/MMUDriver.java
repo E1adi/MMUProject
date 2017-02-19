@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
 
 import com.google.gson.Gson;
 import com.hit.algorithm.IAlgoCache;
@@ -19,6 +20,7 @@ import com.hit.algorithm.SecondChanceAlgoCacheImpl;
 import com.hit.memoryunits.MemoryManagementUnit;
 import com.hit.processes.ProcessCycles;
 import com.hit.processes.RunConfiguration;
+import com.hit.util.MMULogger;
 import com.hit.processes.Process;
 
 public class MMUDriver {
@@ -34,12 +36,14 @@ public class MMUDriver {
 		MemoryManagementUnit mmu;
 		RunConfiguration runConfiguration;
 		List<Process> processesList;
+		MMULogger logger = MMULogger.getInstance();
 		
 		while(true) {
 			CLI cli = new CLI(System.in, System.out);
 			String[] configuration = cli.getConfiguration();
 			cli.write("Processing...");
 			capacity = Integer.parseInt(configuration[1]);
+			logger.write("RC:" + new Integer(capacity).toString() + System.lineSeparator(), Level.INFO);
 			
 			cacheAlgo = algorithmsFactory(configuration[0], capacity);
 			mmu = new MemoryManagementUnit(capacity, cacheAlgo);
@@ -85,7 +89,8 @@ public class MMUDriver {
 		} 
 		catch (FileNotFoundException exception) 
 		{
-			exception.printStackTrace();
+			MMULogger logger = MMULogger.getInstance();
+			logger.write(exception.getMessage(), Level.SEVERE);
 		}
 		return new Gson().fromJson(configurationFile, RunConfiguration.class);
 	}

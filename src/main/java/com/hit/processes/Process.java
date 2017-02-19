@@ -1,11 +1,14 @@
 package com.hit.processes;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 
 import com.hit.memoryunits.MemoryManagementUnit;
 import com.hit.memoryunits.Page;
+import com.hit.util.MMULogger;
 
 public class Process implements Runnable{
 	
@@ -53,7 +56,11 @@ public class Process implements Runnable{
 		List<Page<byte[]>> pagesFromMemory = null;
 		Iterator<Page<byte[]>> pagesIter;
 		Iterator<byte[]> dataIter;
+		MMULogger logger = MMULogger.getInstance();
 		
+		logger.write("PN:" + new Long(Thread.currentThread().getId()).toString() + 
+					 System.lineSeparator() + 
+					 System.lineSeparator(), Level.INFO);
 		
 		for(ProcessCycle pc : processCycles.getProcessCycles()) {
 			
@@ -72,7 +79,7 @@ public class Process implements Runnable{
 				try {
 					pagesFromMemory = mmu.getPages(pc.getPages().toArray(new Long[1]), writePages);
 				} catch (ClassNotFoundException | IOException e1) {
-					e1.printStackTrace();
+					logger.write(e1.getMessage(), Level.SEVERE);
 				}
 				pagesIter = pagesFromMemory.iterator();
 				dataIter = pc.getData().iterator();
@@ -81,14 +88,27 @@ public class Process implements Runnable{
 				while(pagesIter.hasNext() && dataIter.hasNext()) {
 					page = pagesIter.next();
 					data = dataIter.next();
-					if(data == null)
+					if(data == null) {
+						logger.write("GP:P" + new Long(Thread.currentThread().getId()).toString() + 
+									 " " + page.getPageId().toString() +
+									 " []" + 
+									 System.lineSeparator() +
+									 System.lineSeparator(), Level.INFO);
 						continue;
+					}
+					logger.write("GP:P" + new Long(Thread.currentThread().getId()).toString() + 
+								 " " + page.getPageId().toString() +
+								 " " + Arrays.toString(data) + 
+								 System.lineSeparator() +
+								 System.lineSeparator(), Level.INFO);
 					page.setContent(data);
 				}
 			}
 			try {
 				Thread.sleep(sleepMs);
-			} catch (InterruptedException e) {}
+			} catch (InterruptedException e) {
+				logger.write(e.getMessage(), Level.SEVERE);
+			}
 		}
 	}
 
