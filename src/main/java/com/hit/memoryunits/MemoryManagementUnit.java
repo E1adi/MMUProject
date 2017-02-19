@@ -56,7 +56,7 @@ public class MemoryManagementUnit {
 		}
 		readWriteIndex = 0;
 		
-		presentPagesInMemory = _algo.getElement(Arrays.asList(pageIds));
+		presentPagesInMemory = _algo.getElement(requestedPages);
 		Iterator<Long> presentPagesIterator = presentPagesInMemory.iterator();
 		Iterator<Long> requestedPagesIterator = requestedPages.iterator();
 		Long currentRequestedPageID, currentPresentPageID;
@@ -104,14 +104,15 @@ public class MemoryManagementUnit {
 		}
 		
 		for(Long pageId : _algo.getElement(pagesToCheckBeforReturning)) {									// Checking if all pages with writing purpose are in RAM. 
-			if(pageId == null)																				// If not we choose a bad algorithm.
-				System.out.println("Bad Algorithm");
+			if(pageId == null) {																			// If not we choose a bad algorithm.
+			// TODO	System.out.println("Bad Algorithm");
+			}
 		}
 		
 		for(Long pageId : pagesToCheckBeforReturning) {														// Adds all pages for writing purpose to return list.
 			pagesToReturn.add(_RAM.getPage(pageId));
 		}
 		
-		return pagesToReturn;																				// return all found pages.
+		return pagesToReturn;	// return all found pages.
 	}
 }

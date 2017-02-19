@@ -52,13 +52,12 @@ public class Process implements Runnable{
 	@Override
 	public void run() {
 		
-		int sleepMs;
 		List<Page<byte[]>> pagesFromMemory = null;
 		Iterator<Page<byte[]>> pagesIter;
 		Iterator<byte[]> dataIter;
 		MMULogger logger = MMULogger.getInstance();
 		
-		logger.write("PN:" + new Long(Thread.currentThread().getId()).toString() + 
+		logger.write("PN:" + getId() + 
 					 System.lineSeparator() + 
 					 System.lineSeparator(), Level.INFO);
 		
@@ -74,7 +73,7 @@ public class Process implements Runnable{
 				index++;;
 			}
 			
-			sleepMs = pc.getSleepMs();
+			
 			synchronized(mmu) {
 				try {
 					pagesFromMemory = mmu.getPages(pc.getPages().toArray(new Long[1]), writePages);
@@ -89,23 +88,24 @@ public class Process implements Runnable{
 					page = pagesIter.next();
 					data = dataIter.next();
 					if(data == null) {
-						logger.write("GP:P" + new Long(Thread.currentThread().getId()).toString() + 
+						logger.write("GP:P" + getId() + 
 									 " " + page.getPageId().toString() +
 									 " []" + 
 									 System.lineSeparator() +
 									 System.lineSeparator(), Level.INFO);
-						continue;
 					}
-					logger.write("GP:P" + new Long(Thread.currentThread().getId()).toString() + 
-								 " " + page.getPageId().toString() +
-								 " " + Arrays.toString(data) + 
-								 System.lineSeparator() +
-								 System.lineSeparator(), Level.INFO);
-					page.setContent(data);
+					else {	
+						logger.write("GP:P" + getId() + 
+									 " " + page.getPageId().toString() +
+									 " " + Arrays.toString(data) + 
+									 System.lineSeparator() +
+									 System.lineSeparator(), Level.INFO);
+						page.setContent(data);
+					}
 				}
 			}
 			try {
-				Thread.sleep(sleepMs);
+				Thread.sleep(pc.getSleepMs());
 			} catch (InterruptedException e) {
 				logger.write(e.getMessage(), Level.SEVERE);
 			}

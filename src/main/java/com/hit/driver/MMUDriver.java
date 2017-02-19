@@ -37,9 +37,9 @@ public class MMUDriver {
 		RunConfiguration runConfiguration;
 		List<Process> processesList;
 		MMULogger logger = MMULogger.getInstance();
+		CLI cli = new CLI(System.in, System.out);
 		
 		while(true) {
-			CLI cli = new CLI(System.in, System.out);
 			String[] configuration = cli.getConfiguration();
 			cli.write("Processing...");
 			capacity = Integer.parseInt(configuration[1]);
