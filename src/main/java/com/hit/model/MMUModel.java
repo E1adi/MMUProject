@@ -1,10 +1,13 @@
 package com.hit.model;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Observable;
+import java.util.Scanner;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,11 +29,13 @@ public class MMUModel extends Observable implements Model{
 
 	public int numProcesses;
 	public int ramCapacity;
-	
-	
+	private String IAlgoName;
+	private List<String[]> commands;
+	MMULogger logger = MMULogger.getInstance();
 	
 	public MMUModel(String[] configuration) {
-		
+		ramCapacity = Integer.parseInt(configuration[1]);
+		IAlgoName = configuration[0];
 	}
 	
 	public List<String> getCommands() {
@@ -39,14 +44,32 @@ public class MMUModel extends Observable implements Model{
 	
 	@Override
 	public void readData() {
-		// TODO Auto-generated method stub
+		try {
+			Scanner in = new Scanner(new File(MMULogger.DEFAULT_FILE_NAME));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			logger.write(e.getMessage(), Level.SEVERE);
+		}
+		
+		
+		
+		
 		
 	}
 
 	@Override
 	public void start() {
-		// TODO Auto-generated method stub
+		MemoryManagementUnit mmu = new MemoryManagementUnit(ramCapacity, algorithmsFactory(IAlgoName, ramCapacity));
+		RunConfiguration runConfiguration;
+		List<Process> processesList;
 		
+		logger.write(MessageFormat.format("RC:{0}{1}", ramCapacity, System.lineSeparator()), Level.INFO);
+		runConfiguration = readConfigurationFile();
+		processesList = processesCreator(runConfiguration, mmu);
+		numProcesses = processesList.size();
+		commands = new ArrayList<String[]>(numProcesses);
+		
+		runProcesses(processesList);
 	}
 	
 	private void runProcesses(List<Process> processesList) {
