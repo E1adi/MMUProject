@@ -6,7 +6,6 @@ import java.io.FileReader;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
 import java.util.Scanner;
@@ -131,7 +130,8 @@ public class MMUModel extends Observable implements Model{
 		commands = new ArrayList<List<String>>(numProcesses);
 		
 		runProcesses(processesList);
-		notifyObservers(this);
+		setChanged();
+		notifyObservers();
 	}
 	
 	private void runProcesses(List<Process> processesList) {
