@@ -39,6 +39,8 @@ public class MemoryManagementUnit {
 	public List<Page<byte[]>> getPages(Long[] pageIds, boolean[] writePages)
             throws java.io.IOException, ClassNotFoundException {
 		
+		System.out.print("-");
+		
 		int readWriteIndex = 0;
 		Long currentMissingPageID, currentKeyToReplace; 
 		Page<byte[]> pageToRam;

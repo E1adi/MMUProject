@@ -12,6 +12,7 @@ import java.util.Scanner;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
@@ -130,18 +131,27 @@ public class MMUModel extends Observable implements Model{
 		commands = new ArrayList<List<String>>(numProcesses);
 		
 		runProcesses(processesList);
+		System.out.println("\nDone.");
 		setChanged();
 		notifyObservers(new Integer(numProcesses));
 	}
 	
 	private void runProcesses(List<Process> processesList) {
-		Executor executor = Executors.newCachedThreadPool();
+		ExecutorService executor = Executors.newCachedThreadPool();
 				
 		for(Process process: processesList) {
 			executor.execute(new Thread(process));
 		}
 		
-		((ExecutorService) executor).shutdown();
+		executor.shutdown();
+		try 
+		{
+			executor.awaitTermination(2, TimeUnit.MINUTES);
+		} 
+		catch (InterruptedException exception) 
+		{
+			MMULogger.getInstance().write(exception.getMessage(), Level.SEVERE);
+		}
 	}
 
 	
@@ -154,6 +164,7 @@ public class MMUModel extends Observable implements Model{
 			processId++;
 		}
 		
+		logger.write(MessageFormat.format("PN:{0}{1}{1}",processId ,System.lineSeparator()), Level.INFO);
 		return processes;
 	}
 	
