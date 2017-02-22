@@ -131,7 +131,7 @@ public class MMUModel extends Observable implements Model{
 		
 		runProcesses(processesList);
 		setChanged();
-		notifyObservers();
+		notifyObservers(new Integer(numProcesses));
 	}
 	
 	private void runProcesses(List<Process> processesList) {
