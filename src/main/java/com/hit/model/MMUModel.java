@@ -1,21 +1,18 @@
 package com.hit.model;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Observable;
-import java.util.Scanner;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
-
 import com.google.gson.Gson;
 import com.hit.algorithm.IAlgoCache;
 import com.hit.algorithm.LRUAlgoCacheImpl;
@@ -33,7 +30,7 @@ public class MMUModel extends Observable implements Model{
 	public int numProcesses;
 	public int ramCapacity;
 	private String IAlgoName;
-	private List<List<String>> commands;
+	private List<String> commands;
 	MMULogger logger = MMULogger.getInstance();
 	
 	public MMUModel(String[] configuration) {
@@ -41,81 +38,89 @@ public class MMUModel extends Observable implements Model{
 		IAlgoName = configuration[0];
 	}
 	
-	public List<String> getCommands(String processNumber) {
+	public List<String> getCommands(/*String processNumber*/) {
+
+		return commands;
 		
-		Iterator<List<String>> iter = commands.iterator();
-		List<String> currentList;
-		
-		while (iter.hasNext()) {
-			currentList = iter.next();
-			if(currentList.get(0) == processNumber) {
-				return currentList;
-			}
-		}
-		
-		return null;
+//		Iterator<List<String>> iter = commands.iterator();
+//		List<String> currentList;
+//		
+//		while (iter.hasNext()) {
+//			currentList = iter.next();
+//			if(currentList.get(0) == processNumber) {
+//				return currentList;
+//			}
+//		}
+//		
+//		return null;
 	}
 	
 	@Override
 	public void readData() {
 		
-		String currentLine = new String();
-		Scanner in = null;
-		int i = 0;
-		
 		try {
-			in = new Scanner(new File(MMULogger.DEFAULT_FILE_NAME));
-		} catch (FileNotFoundException e) {
+			commands = Files.readAllLines(Paths.get(MMULogger.DEFAULT_FILE_NAME));
+		} catch (IOException e) {
 			logger.write(e.getMessage(), Level.SEVERE);
 		}
 		
-		in.useDelimiter("\r\n");
-		
-		while(in.hasNextLine()) {
-			if((in.findInLine(Pattern.compile("PN:"))) != null) {
-				commands.add(new ArrayList<String>());
-				currentLine = in.next();
-				commands.get(i).add(currentLine);
-			}
-			in.nextLine();
-		}
-		
-		try {
-			in = new Scanner(new File(MMULogger.DEFAULT_FILE_NAME));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		
-		in.useDelimiter("\r\n");
-		
-		while(in.hasNextLine()) {
-			if((in.findInLine(Pattern.compile("PN:"))) != null) {
-				commands.add(new ArrayList<String>());
-				currentLine = in.next();
-				commands.get(i).add(currentLine);
-				i++;
-			}
-			in.nextLine();
-		}	
-		
-		Iterator<List<String>> iter = commands.iterator();
-		List<String> currentList;
-		
-		while(iter.hasNext()) {
-			currentList = iter.next();
-			
-			try {
-				in = new Scanner(new File(MMULogger.DEFAULT_FILE_NAME));
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-		
-			while(in.hasNextLine()) {
-				if((currentLine = in.nextLine()).startsWith("GP:P" + currentList.get(0))) {
-					currentList.add(currentLine);
-				}
-			}
-		}
+//		String currentLine = new String();
+//		Scanner in = null;
+//		int i = 0;
+//		
+//		try {
+//			in = new Scanner(new File(MMULogger.DEFAULT_FILE_NAME));
+//		} catch (FileNotFoundException e) {
+//			logger.write(e.getMessage(), Level.SEVERE);
+//		}
+//		
+//		in.useDelimiter("\r\n");
+//		
+//		while(in.hasNextLine()) {
+//			if((in.findInLine(Pattern.compile("PN:"))) != null) {
+//				commands.add(new ArrayList<String>());
+//				currentLine = in.next();
+//				commands.get(i).add(currentLine);
+//			}
+//			in.nextLine();
+//		}
+//		
+//		try {
+//			in = new Scanner(new File(MMULogger.DEFAULT_FILE_NAME));
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//		
+//		in.useDelimiter("\r\n");
+//		
+//		while(in.hasNextLine()) {
+//			if((in.findInLine(Pattern.compile("PN:"))) != null) {
+//				commands.add(new ArrayList<String>());
+//				currentLine = in.next();
+//				commands.get(i).add(currentLine);
+//				i++;
+//			}
+//			in.nextLine();
+//		}	
+//		
+//		Iterator<List<String>> iter = commands.iterator();
+//		List<String> currentList;
+//		
+//		while(iter.hasNext()) {
+//			currentList = iter.next();
+//			
+//			try {
+//				in = new Scanner(new File(MMULogger.DEFAULT_FILE_NAME));
+//			} catch (FileNotFoundException e) {
+//				e.printStackTrace();
+//			}
+//		
+//			while(in.hasNextLine()) {
+//				if((currentLine = in.nextLine()).startsWith("GP:P" + currentList.get(0))) {
+//					currentList.add(currentLine);
+//				}
+//			}
+//		}
 	}
 
 	@Override
@@ -128,7 +133,7 @@ public class MMUModel extends Observable implements Model{
 		runConfiguration = readConfigurationFile();
 		processesList = processesCreator(runConfiguration, mmu);
 		numProcesses = processesList.size();
-		commands = new ArrayList<List<String>>(numProcesses);
+//		commands = new ArrayList<List<String>>(numProcesses);
 		
 		runProcesses(processesList);
 		System.out.println("\nDone.");

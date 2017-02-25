@@ -22,10 +22,11 @@ public class MMUController extends Object implements Controller, Observer {
 	public void update(Observable o, Object arg1) {
 		if(o == model) {
 			view.open();
-			((MMUView)view).addProcesses((Integer)arg1);
 		}
 		if(o == view) {
-			
+			model.readData();
+			((MMUView)view).addProcesses(((MMUModel)model).numProcesses);
+			((MMUView)view).setConfiguration(((MMUModel)model).getCommands());
 		}
 		
 	}

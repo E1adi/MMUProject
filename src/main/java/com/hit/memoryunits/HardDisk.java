@@ -104,7 +104,7 @@ public class HardDisk {
             															   java.io.IOException, ClassNotFoundException {
 		
 		MMULogger logger = MMULogger.getInstance();
-		logger.write("PR:MTH " + moveToHdPage.getPageId().toString() + "MTR " + moveToRamId.toString() + System.lineSeparator(), Level.INFO);
+		logger.write("PR:MTH " + moveToHdPage.getPageId().toString() + " MTR " + moveToRamId.toString() + System.lineSeparator(), Level.INFO);
 		
 		ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(DEFAULT_FILE_NAME));
 		ObjectOutputStream outputStream = null;
