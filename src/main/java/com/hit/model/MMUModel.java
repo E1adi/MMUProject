@@ -39,88 +39,16 @@ public class MMUModel extends Observable implements Model{
 	}
 	
 	public List<String> getCommands(/*String processNumber*/) {
-
 		return commands;
-		
-//		Iterator<List<String>> iter = commands.iterator();
-//		List<String> currentList;
-//		
-//		while (iter.hasNext()) {
-//			currentList = iter.next();
-//			if(currentList.get(0) == processNumber) {
-//				return currentList;
-//			}
-//		}
-//		
-//		return null;
 	}
 	
 	@Override
 	public void readData() {
-		
 		try {
 			commands = Files.readAllLines(Paths.get(MMULogger.DEFAULT_FILE_NAME));
 		} catch (IOException e) {
 			logger.write(e.getMessage(), Level.SEVERE);
 		}
-		
-//		String currentLine = new String();
-//		Scanner in = null;
-//		int i = 0;
-//		
-//		try {
-//			in = new Scanner(new File(MMULogger.DEFAULT_FILE_NAME));
-//		} catch (FileNotFoundException e) {
-//			logger.write(e.getMessage(), Level.SEVERE);
-//		}
-//		
-//		in.useDelimiter("\r\n");
-//		
-//		while(in.hasNextLine()) {
-//			if((in.findInLine(Pattern.compile("PN:"))) != null) {
-//				commands.add(new ArrayList<String>());
-//				currentLine = in.next();
-//				commands.get(i).add(currentLine);
-//			}
-//			in.nextLine();
-//		}
-//		
-//		try {
-//			in = new Scanner(new File(MMULogger.DEFAULT_FILE_NAME));
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//		}
-//		
-//		in.useDelimiter("\r\n");
-//		
-//		while(in.hasNextLine()) {
-//			if((in.findInLine(Pattern.compile("PN:"))) != null) {
-//				commands.add(new ArrayList<String>());
-//				currentLine = in.next();
-//				commands.get(i).add(currentLine);
-//				i++;
-//			}
-//			in.nextLine();
-//		}	
-//		
-//		Iterator<List<String>> iter = commands.iterator();
-//		List<String> currentList;
-//		
-//		while(iter.hasNext()) {
-//			currentList = iter.next();
-//			
-//			try {
-//				in = new Scanner(new File(MMULogger.DEFAULT_FILE_NAME));
-//			} catch (FileNotFoundException e) {
-//				e.printStackTrace();
-//			}
-//		
-//			while(in.hasNextLine()) {
-//				if((currentLine = in.nextLine()).startsWith("GP:P" + currentList.get(0))) {
-//					currentList.add(currentLine);
-//				}
-//			}
-//		}
 	}
 
 	@Override
@@ -133,10 +61,9 @@ public class MMUModel extends Observable implements Model{
 		runConfiguration = readConfigurationFile();
 		processesList = processesCreator(runConfiguration, mmu);
 		numProcesses = processesList.size();
-//		commands = new ArrayList<List<String>>(numProcesses);
 		
 		runProcesses(processesList);
-		System.out.println("\nDone.");
+		System.out.println("Done.");
 		setChanged();
 		notifyObservers(new Integer(numProcesses));
 	}
@@ -182,7 +109,6 @@ public class MMUModel extends Observable implements Model{
 		} 
 		catch (FileNotFoundException exception) 
 		{
-			MMULogger logger = MMULogger.getInstance();
 			logger.write(exception.getMessage(), Level.SEVERE);
 		}
 		return new Gson().fromJson(configurationFile, RunConfiguration.class);

@@ -2,13 +2,12 @@ package com.hit.view;
 
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Rectangle;
@@ -25,7 +24,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import com.hit.util.MMULogger;
+
 
 
 public class MMUView extends java.util.Observable implements View {
@@ -50,13 +49,13 @@ public class MMUView extends java.util.Observable implements View {
 	private Set<String> selectedProcess;
 	private Iterator<String> commandsIterator;
 	private List<String> commands;
-	TableColumn[] tableCols;
+	private TableColumn[] tableCols;
 	private TableItem[] tableRows;
-	private MMULogger logger = MMULogger.getInstance();
 	private List<String> prCommands;
 	private List<Integer> memoryMap;
 	private List<Integer> lastMemoryMap;
-	
+	private Stack<State> lastStates;
+	private Stack<State> fowardStates;
 	
 	public MMUView() {
 		prCommands = new ArrayList<String>();
@@ -213,16 +212,27 @@ public class MMUView extends java.util.Observable implements View {
 	    playButton.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event arg0) {
-		    	oneStep();
-		    	enableStepBackAndReset(true);
+				if(fowardStates.size() > 0) {
+					lastStates.push(saveState());
+					doLastStep(fowardStates.pop());
+				}
+				else
+					oneStep();
+				enableStepBackAndReset(true);
 			}
 	    });
 	    
 	    playAllButton.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event arg0) {
-		    	allSteps();
-		    	enableStepBackAndReset(true);
+				while(fowardStates.size() > 0) {
+					lastStates.push(saveState());
+					doLastStep(fowardStates.pop());
+				}
+				while(commandsIterator.hasNext()) {
+					oneStep();
+				}
+				enableStepBackAndReset(true);
 			}
 	    });
 	    
@@ -235,48 +245,31 @@ public class MMUView extends java.util.Observable implements View {
 			}
 	    });
 	    
+	    stepBackButton.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event arg0) {
+				fowardStates.push(saveState());
+				doLastStep(lastStates.pop());
+				enablePlay(true);
+				if(lastStates.size() == 0) {
+					enableStepBackAndReset(false);
+				}
+			}
+	    });
+	    
 	    shell.open ();
 		shell.setMinimized(false);
+
 		setChanged();
 		notifyObservers();
-
+		
 		while (!shell.isDisposed ()) {
 			if (!display.readAndDispatch ()) display.sleep ();
 		}
 		display.dispose ();
-		
-		logger.close();
-		System.out.println("Thank you..");
-		System.exit(0);
+
 	}
 
-	private void clearAll() {
-		pfAmount = 0;
-		realPfAmount = 0;
-		prAmount = 0;
-		prCommands.clear();;
-		memoryMap.clear();
-		lastMemoryMap.clear();
-		setPreConfiguration(this.commands);
-		
-		updateFields();
-		
-		Display.getDefault().syncExec(new Runnable() {
-
-			@Override
-			public void run() {
-				if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) {
-					for(int i = 0; i<NUM_MMU_PAGES; i++) {
-						tableCols[i].setText("");
-						for(int j = 0; j < BYTES_IN_PAGE; j++) {
-							tableRows[j].setText(i, "");
-						}
-					}
-				}
-			}
-		});
-	}
-	
 	private void setPreConfiguration(List<String> commands) {
 		this.commands = commands;
 		commandsIterator = this.commands.iterator();
@@ -293,6 +286,8 @@ public class MMUView extends java.util.Observable implements View {
 			}
 		}		
 		commandsIterator = this.commands.iterator();
+		lastStates = new Stack<State>();
+		fowardStates = new Stack<State>();
 	}
 	
 	public void setConfiguration(List<String> commands) {
@@ -301,98 +296,84 @@ public class MMUView extends java.util.Observable implements View {
 		
 		tableCols = new TableColumn[NUM_MMU_PAGES];
 		tableRows = new TableItem[BYTES_IN_PAGE];
-				
-		Display.getDefault().syncExec(new Runnable() {
+		
 
-			@Override
-			public void run() {
-				if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) {
-				    for(int i = 0; i<NUM_MMU_PAGES; i++) {
-				    	tableCols[i] = new TableColumn(pageTable, SWT.CENTER);
-				    	tableCols[i].setText("");
-				    	tableCols[i].setWidth(50);
-				    }
-				    
-				    for(int i = 0; i<BYTES_IN_PAGE; i++) {	    	
-				    	tableRows[i] = new TableItem(pageTable, SWT.CENTER);
-				    }
-				}
-			}
-			
-		});
-	}
-	
-	
-	private void updateFields() {
-		Display.getDefault().syncExec(new Runnable() {
-
-			@Override
-			public void run() {
-				if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
-					pageFaultText.setText(realPfAmount.toString());
-					pageReplacementText.setText(prAmount.toString());
-				}
-			}
-		});
-	}
-	
-	private void updateTable(List<String> data) {
-		Display.getDefault().syncExec(new Runnable() {
-
-			@Override
-			public void run() {
-				if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
-
-					Integer pagePos;
-				
-					if(lastMemoryMap.size() > 0) {
-						for(Integer pageId: memoryMap) {
-							pagePos = memoryMap.indexOf(pageId);
-							if(lastMemoryMap.contains(pageId)) {
-								Integer pageLastPos = lastMemoryMap.indexOf(pageId);
-								if(pagePos != pageLastPos) {
-									tableCols[pagePos].setText(pageId.toString());
-									for(int i=0; i<BYTES_IN_PAGE; i++) {
-										tableRows[i].setText(pagePos, tableRows[i].getText(pageLastPos));
-									}
-								}
-							}
-						}
-						for(int i = memoryMap.size(); i < NUM_MMU_PAGES; i++) {
-							tableCols[i].setText("");
-							for(int j = 0; j < BYTES_IN_PAGE; j++) {
-								tableRows[j].setText(i, "");
-							}
-						}
-					}
-					lastMemoryMap.clear();
-					lastMemoryMap.addAll(memoryMap);
-					
-					if(data != null) {
-						Iterator<String> dataIter = data.iterator();
-						String pageId = dataIter.next();
-						Integer pageIdInt = Integer.parseInt(pageId);
-						Integer pageColIndex = memoryMap.indexOf(pageIdInt);
-						String curBite;
-						
-						tableCols[pageColIndex].setText(pageId);
-						for(int i = 0; i < BYTES_IN_PAGE; i++) {
-							curBite = dataIter.next();
-							tableRows[i].setText(pageColIndex, curBite);
-						}
-					}
-				}
-			}
-		});
-	}
-	
-	private void allSteps() {
-		while(commandsIterator.hasNext()) {
-//			Display.getDefault().
-			oneStep();
+		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) {
+		    for(int i = 0; i<NUM_MMU_PAGES; i++) {
+		    	tableCols[i] = new TableColumn(pageTable, SWT.CENTER);
+		    	tableCols[i].setText("");
+		    	tableCols[i].setWidth(50);
+		    }
+		    
+		    for(int i = 0; i<BYTES_IN_PAGE; i++) {	    	
+		    	tableRows[i] = new TableItem(pageTable, SWT.CENTER);
+		    }
 		}
 	}
 	
+	private void doLastStep(State lastState) {	
+			
+		List<List<String>> tableInfo = lastState.getTableInfo();
+		
+		lastMemoryMap.clear();
+		lastMemoryMap.addAll(lastState.getLastMemoryMap());
+		memoryMap.clear();
+		memoryMap.addAll(lastState.getMemoryMap());
+		prCommands.clear();
+		prCommands.addAll(lastState.getPrCommands());
+		
+		pfAmount = lastState.getPfAmount();
+		prAmount = lastState.getPrAmount();
+		realPfAmount = lastState.getRealPfAmount();
+		
+		
+		
+		for(int i = 0; i<NUM_MMU_PAGES; i++) {
+			tableCols[i].setText(tableInfo.get(i).get(0));
+			for(int j=0; j<BYTES_IN_PAGE; j++) {
+				tableRows[j].setText(i, tableInfo.get(i).get(j+1));
+			}
+		}
+		
+		updateFields();
+		enablePlay(true);
+	}
+	
+	private void clearAll() {
+		pfAmount = 0;
+		realPfAmount = 0;
+		prAmount = 0;
+		prCommands.clear();;
+		memoryMap.clear();
+		lastMemoryMap.clear();
+		setPreConfiguration(this.commands);
+		
+		updateFields();
+		
+		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) {
+			for(int i = 0; i<NUM_MMU_PAGES; i++) {
+				tableCols[i].setText("");
+				for(int j = 0; j < BYTES_IN_PAGE; j++) {
+					tableRows[j].setText(i, "");
+				}
+			}
+		}
+	}
+	
+	
+	private State saveState() {
+		State lastState = new State();
+		
+		lastState.setLastMemoryMap(lastMemoryMap);
+		lastState.setMemoryMap(memoryMap);
+		lastState.setPfAmount(pfAmount);
+		lastState.setPrAmount(prAmount);
+		lastState.setRealPfAmount(realPfAmount);
+		lastState.setPrCommands(prCommands);
+		lastState.setTableInfo(tableCols, tableRows);
+		
+		return lastState;
+	}
 	
 	private void oneStep() {
 		String curCommand;
@@ -400,7 +381,9 @@ public class MMUView extends java.util.Observable implements View {
 		String pageId;
 		String curCommandFixed;
 		List<String> pageData = new LinkedList<String>();
-
+		
+		lastStates.push(saveState());
+		
 		while(commandsIterator.hasNext()) {
 			curCommand = commandsIterator.next();
 			if(curCommand.startsWith("PF:")) {
@@ -451,53 +434,163 @@ public class MMUView extends java.util.Observable implements View {
 		updateFields();
 	}
 
-	
-	private void enablePlay(boolean flag) {
-		Display.getDefault().syncExec(new Runnable(){
-			@Override
-			public void run() {
-				if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
-					playButton.setEnabled(flag);
-					playAllButton.setEnabled(flag);
+	private void updateTable(List<String> data) {
+		
+		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
+			
+			Integer pagePos;
+			
+			if(lastMemoryMap.size() > 0) {
+				for(Integer pageId: memoryMap) {
+					pagePos = memoryMap.indexOf(pageId);
+					if(lastMemoryMap.contains(pageId)) {
+						Integer pageLastPos = lastMemoryMap.indexOf(pageId);
+						if(pagePos != pageLastPos) {
+							tableCols[pagePos].setText(pageId.toString());
+							for(int i=0; i<BYTES_IN_PAGE; i++) {
+								tableRows[i].setText(pagePos, tableRows[i].getText(pageLastPos));
+							}
+						}
+					}
 				}
-			}
-		});
-	}
-	
-	private void enableStepBackAndReset(boolean flag) {
-		Display.getDefault().syncExec(new Runnable(){
-			@Override
-			public void run() {
-				if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
-					resetButton.setEnabled(flag);
-					stepBackButton.setEnabled(flag);
-				}
-			}
-		});
-	}
-	
-	public void addProcesses(Integer numOfProcess) {
-		Display.getDefault().syncExec(new Runnable(){
-			@Override
-			public void run() {
-				if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
-					for(Integer i=0; i < numOfProcess; i++) {
-						processChoose.add("Process " + i.toString());
+				for(int i = memoryMap.size(); i < NUM_MMU_PAGES; i++) {
+					tableCols[i].setText("");
+					for(int j = 0; j < BYTES_IN_PAGE; j++) {
+						tableRows[j].setText(i, "");
 					}
 				}
 			}
-		});
+			lastMemoryMap.clear();
+			lastMemoryMap.addAll(memoryMap);
+			
+			if(data != null) {
+				Iterator<String> dataIter = data.iterator();
+				String pageId = dataIter.next();
+				Integer pageIdInt = Integer.parseInt(pageId);
+				Integer pageColIndex = memoryMap.indexOf(pageIdInt);
+				String curBite;
+				
+				tableCols[pageColIndex].setText(pageId);
+				for(int i = 0; i < BYTES_IN_PAGE; i++) {
+					curBite = dataIter.next();
+					tableRows[i].setText(pageColIndex, curBite);
+				}
+			}
+		}
+	}
+	
+	
+	private void updateFields() {
+		
+		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
+			pageFaultText.setText(realPfAmount.toString());
+			pageReplacementText.setText(prAmount.toString());
+		}
+	}
+	
+	private void enablePlay(boolean flag) {
+		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
+			playButton.setEnabled(flag);
+			playAllButton.setEnabled(flag);
+		}
+	}
+	
+	private void enableStepBackAndReset(boolean flag) {
+		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
+			resetButton.setEnabled(flag);
+			stepBackButton.setEnabled(flag);
+		}
+	}
+	
+	public void addProcesses(Integer numOfProcess) {
+		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) {
+			for(Integer i=0; i < numOfProcess; i++) {
+				processChoose.add("Process " + i.toString());
+			}
+		}
 	}
 	
 	@Override
 	public void open() {
-		javax.swing.SwingUtilities.invokeLater(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				createAndShowGui();
+		createAndShowGui();
+	}
+	
+	private class State {
+		private List<String> prCommands;
+		private List<Integer> memoryMap;
+		private List<Integer> lastMemoryMap;	
+		private Integer pfAmount;
+		private Integer realPfAmount;
+		private Integer prAmount;
+		private ArrayList<List<String>> tableInfo;
+
+		
+
+		public ArrayList<List<String>> getTableInfo() {
+			return tableInfo;
+		}
+
+		public void setTableInfo(TableColumn[] tableCols, TableItem[] tableRows) {
+			for(int i=0; i<NUM_MMU_PAGES; i++) {
+				(tableInfo.get(i)).add(tableCols[i].getText());
+				for(int j=0; j<BYTES_IN_PAGE; j++) {
+					(tableInfo.get(i)).add(tableRows[j].getText(i));
+				}
 			}
-		});
+		}
+
+		public State() {
+			prCommands = new ArrayList<String>();
+			memoryMap = new LinkedList<Integer>();
+			lastMemoryMap = new LinkedList<Integer>();
+			tableInfo = new ArrayList<List<String>>(NUM_MMU_PAGES);
+			for(int i=0; i<NUM_MMU_PAGES; i++) {
+				tableInfo.add(new LinkedList<String>());
+			}
+		}
+		
+		public List<String> getPrCommands() {
+			return prCommands;
+		}
+		public void setPrCommands(List<String> prCommands) {
+			this.prCommands.clear();
+			if(prCommands != null)
+				this.prCommands.addAll(prCommands);
+		}
+		public List<Integer> getMemoryMap() {
+			return memoryMap;
+		}
+		public void setMemoryMap(List<Integer> memoryMap) {
+			this.memoryMap.clear();
+			if(memoryMap != null)
+				this.memoryMap.addAll(memoryMap);
+		}
+		public List<Integer> getLastMemoryMap() {
+			return lastMemoryMap;
+		}
+		public void setLastMemoryMap(List<Integer> lastMemoryMap) {
+			this.lastMemoryMap.clear();
+			if(lastMemoryMap != null)
+				this.lastMemoryMap.addAll(lastMemoryMap);
+		}
+		public Integer getPfAmount() {
+			return pfAmount;
+		}
+		public void setPfAmount(Integer pfAmount) {
+			this.pfAmount = pfAmount;
+		}
+		public Integer getRealPfAmount() {
+			return realPfAmount;
+		}
+		public void setRealPfAmount(Integer realPfAmount) {
+			this.realPfAmount = realPfAmount;
+		}
+		public Integer getPrAmount() {
+			return prAmount;
+		}
+		public void setPrAmount(Integer prAmount) {
+			this.prAmount = prAmount;
+		}
+		
 	}
 }
