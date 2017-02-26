@@ -88,6 +88,7 @@ public class CLI {
 			}
 		} while (invalidInput);
 		
+		write("Processing...");
 		return new String[]{requestedAlgorithm, ramCapacity.toString()};
 	}	
 	

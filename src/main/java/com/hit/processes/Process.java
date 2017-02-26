@@ -15,7 +15,7 @@ public class Process implements Runnable{
 	private int id;
 	private MemoryManagementUnit mmu;
 	private ProcessCycles processCycles;
-	
+	private MMULogger logger = MMULogger.getInstance();
 	
 //	This constructor represents a process constructor, which gets 3 configure parameters to simulate real process
 //	Parameters:
@@ -55,11 +55,6 @@ public class Process implements Runnable{
 		List<Page<byte[]>> pagesFromMemory = null;
 		Iterator<Page<byte[]>> pagesIter;
 		Iterator<byte[]> dataIter;
-		MMULogger logger = MMULogger.getInstance();
-		
-		logger.write("PN:" + getId() + 
-					 System.lineSeparator() + 
-					 System.lineSeparator(), Level.INFO);
 		
 		for(ProcessCycle pc : processCycles.getProcessCycles()) {
 			
