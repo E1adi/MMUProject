@@ -1,5 +1,6 @@
 package com.hit.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
@@ -7,7 +8,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 public class MMULogger {
-	
 	public final static String DEFAULT_FILE_NAME = "./logs/log.txt";
 	private FileHandler handler;
 	private static MMULogger _instance = null;
@@ -17,9 +17,12 @@ public class MMULogger {
 	// Private default constructor for creating a handler and setting the handler format.
 	private MMULogger() {
 		try {
+			File logFile = new File(DEFAULT_FILE_NAME);
+			if(logFile.exists()) {
+				logFile.delete();
+			}
 			handler = new FileHandler(DEFAULT_FILE_NAME);
 		} catch (SecurityException | IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		handler.setFormatter(new OnlyMessageFormatter());
@@ -48,6 +51,7 @@ public class MMULogger {
 	
 	public void close() {
 		handler.close();
+//		_instance = null;
 	}
 	
 	// Nested formatter class for handler.

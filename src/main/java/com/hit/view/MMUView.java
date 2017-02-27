@@ -24,6 +24,8 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
+import com.hit.util.MMULogger;
+
 
 
 
@@ -54,8 +56,8 @@ public class MMUView extends java.util.Observable implements View {
 	private List<String> prCommands;
 	private List<Integer> memoryMap;
 	private List<Integer> lastMemoryMap;
-	private Stack<State> lastStates;
-	private Stack<State> fowardStates;
+	private Stack<State> undoStack;
+	private Stack<State> redoStack;
 	
 	public MMUView() {
 		prCommands = new ArrayList<String>();
@@ -81,7 +83,7 @@ public class MMUView extends java.util.Observable implements View {
 		shell.setLayout(layout);
 		int width = 600;
 		int height = 350;
-		shell.setBounds((screenSize.width/2) - (width/2), (screenSize.height/2) - (height/2), width, height);
+		shell.setBounds((screenSize.width/2) - (width/2), (screenSize.height/2) - (height/2), width, height);    // Centering the window position
 		shell.setText("MMU Simulator");
 		
 		
@@ -219,9 +221,9 @@ public class MMUView extends java.util.Observable implements View {
 	    playButton.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event arg0) {
-				if(fowardStates.size() > 0) {
-					lastStates.push(saveState());
-					doASavedStateStep(fowardStates.pop());
+				if(redoStack.size() > 0) {
+					undoStack.push(saveState());
+					doASavedStateStep(redoStack.pop());
 				}
 				else
 					oneStep();
@@ -232,9 +234,9 @@ public class MMUView extends java.util.Observable implements View {
 	    playAllButton.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event arg0) {
-				while(fowardStates.size() > 0) {
-					lastStates.push(saveState());
-					doASavedStateStep(fowardStates.pop());
+				while(redoStack.size() > 0) {
+					undoStack.push(saveState());
+					doASavedStateStep(redoStack.pop());
 				}
 				while(commandsIterator.hasNext()) {
 					oneStep();
@@ -255,10 +257,10 @@ public class MMUView extends java.util.Observable implements View {
 	    stepBackButton.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event arg0) {
-				fowardStates.push(saveState());
-				doASavedStateStep(lastStates.pop());
+				redoStack.push(saveState());
+				doASavedStateStep(undoStack.pop());
 				enablePlay(true);
-				if(lastStates.size() == 0) {
+				if(undoStack.size() == 0) {
 					enableStepBackAndReset(false);
 				}
 			}
@@ -269,13 +271,14 @@ public class MMUView extends java.util.Observable implements View {
 	    shell.forceFocus();
 
 		setChanged();
-		notifyObservers();
+		notifyObservers("Ready");
 		
 		while (!shell.isDisposed ()) {
 			if (!display.readAndDispatch ()) display.sleep ();
 		}
 		display.dispose ();
-
+		setChanged();
+		notifyObservers("Done");		
 	}
 
 	private void setPreConfiguration(List<String> commands) {				// common to reset button and setConfiguration method. reusing code.
@@ -294,8 +297,8 @@ public class MMUView extends java.util.Observable implements View {
 			}
 		}		
 		commandsIterator = this.commands.iterator();
-		lastStates = new Stack<State>();
-		fowardStates = new Stack<State>();
+		undoStack = new Stack<State>();
+		redoStack = new Stack<State>();
 	}
 	
 	public void setConfiguration(List<String> commands) {
@@ -306,7 +309,7 @@ public class MMUView extends java.util.Observable implements View {
 		tableRows = new TableItem[BYTES_IN_PAGE];
 		
 
-		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) {
+		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) {			// building page table
 		    for(int i = 0; i<NUM_MMU_PAGES; i++) {
 		    	tableCols[i] = new TableColumn(pageTable, SWT.CENTER);
 		    	tableCols[i].setText("");
@@ -319,7 +322,7 @@ public class MMUView extends java.util.Observable implements View {
 		}
 	}
 	
-	private void doASavedStateStep(State lastState) {				// for displaying saved states.	
+	private void doASavedStateStep(State lastState) {				// for undo/redo executions.	
 			
 		List<List<String>> tableInfo = lastState.getTableInfo();
 		
@@ -390,56 +393,56 @@ public class MMUView extends java.util.Observable implements View {
 		String curCommandFixed;
 		List<String> pageData = new LinkedList<String>();
 		
-		lastStates.push(saveState());
+		undoStack.push(saveState());
 		
 		while(commandsIterator.hasNext()) {
 			curCommand = commandsIterator.next();
-			if(curCommand.startsWith("PF:")) {
+			if(curCommand.startsWith("PF:")) {			// amount of PF lines parsed from data until now.
 				pfAmount++;
 			}
-			else if(curCommand.startsWith("PR:")) {
+			else if(curCommand.startsWith("PR:")) {		// saving each PR command to know which page to switch out from the table when the table is full.
 				prCommands.add(curCommand);	
 			}
-			else if(curCommand.startsWith("GP:")) {
-				if(realPfAmount < pfAmount) {
+			else if(curCommand.startsWith("GP:")) {		
+				if(realPfAmount < pfAmount) {			// realPFAmount is the matching for each PF line a GP line
 					realPfAmount++;
 				}
-				curProcess = curCommand.substring(4, curCommand.length()).split(" ")[0];
-				pageId = curCommand.split(" ")[1];
-				if(prCommands.size() > 0) {
+				curProcess = curCommand.substring(4, curCommand.length()).split(" ")[0];	// get current GP command process number
+				pageId = curCommand.split(" ")[1];											// get current GP command page id
+				if(prCommands.size() > 0) {													// Checking if the first PR command match to the current GP command by matching GP page id with PR MTR
 					String pr = prCommands.get(0);
 					String pageToHd = pr.split(" ")[1];
 					Integer pageToHdInt = Integer.parseInt(pageToHd);
 					String pageToRam = pr.split(" ")[3];
 					if(pageId.equals(pageToRam)) {
-						if(memoryMap.contains(pageToHdInt)) {
+						if(memoryMap.contains(pageToHdInt)) {								// If it is then set the MTH page of this PR command to be switch out from the table by removing him from the memory map 
 							memoryMap.remove(pageToHdInt);
 						}
-						prAmount++;
+						prAmount++;					
 						prCommands.remove(0);
 					}
 				}
-				if(selectedProcess.contains(curProcess)) {
+				if(selectedProcess.contains(curProcess)) {									// if this GP command is belong to a process that i am interested in,  
 					Integer pageIdInt = Integer.parseInt(pageId);
-					if(!memoryMap.contains(pageIdInt)) {
+					if(!memoryMap.contains(pageIdInt)) {										// if the page id of the current GP command is not already in table, add it to memory map
 						memoryMap.add(pageIdInt);						
 					}
 					pageData.add(pageId);
-					curCommandFixed = curCommand.replaceAll("[,\\[\\]]", "");
+					curCommandFixed = curCommand.replaceAll("[,\\[\\]]", "");					// Reassemble page id and page data into a list of String with length of BYTES_IN_PAGE +1
 					for(int i = 0; i<BYTES_IN_PAGE; i++) {
 						pageData.add(curCommandFixed.split(" ")[2+i]);
 					}
-					updateTable(pageData);
+					updateTable(pageData);														// update table with the new page
 				}
-				else {updateTable(null);}
-				break;
+				else {updateTable(null);}													// if this GP command is  not belong to a process that i am interested in, 
+				break;																			// update table with no new page to add.
 			}
-			else {continue;}
+			else {continue;}															// if its not a GP, PR or PF command, continue to parse the next line.
 		}
-		if(!commandsIterator.hasNext()) {
+		if(!commandsIterator.hasNext()) {												// if this is the last line in data, disable play buttons
 			enablePlay(false);
 		}
-		updateFields();
+		updateFields();																// update PR and PF labels 
 	}
 
 	private void updateTable(List<String> data) {				// Update table with a given new row.
@@ -448,7 +451,8 @@ public class MMUView extends java.util.Observable implements View {
 			
 			Integer pagePos;
 			
-			// Redraw table with new RAM memory map.
+			// Redraw table by new RAM memory map.
+			// Removing pages which are removed from memory map and left aligning all the pages that was positioned right to the removed pages.
 			if(lastMemoryMap.size() > 0) {						
 				for(Integer pageId: memoryMap) {
 					pagePos = memoryMap.indexOf(pageId);
@@ -462,6 +466,7 @@ public class MMUView extends java.util.Observable implements View {
 						}
 					}
 				}
+				// blanking all columns that should not be in use
 				for(int i = memoryMap.size(); i < NUM_MMU_PAGES; i++) {		
 					tableCols[i].setText("");
 					for(int j = 0; j < BYTES_IN_PAGE; j++) {
@@ -470,7 +475,7 @@ public class MMUView extends java.util.Observable implements View {
 				}
 			}
 			lastMemoryMap.clear();
-			lastMemoryMap.addAll(memoryMap);
+			lastMemoryMap.addAll(memoryMap);		// update last memory map to be the current memory map
 			
 			if(data != null) {
 				Iterator<String> dataIter = data.iterator();
@@ -479,7 +484,8 @@ public class MMUView extends java.util.Observable implements View {
 				Integer pageColIndex = memoryMap.indexOf(pageIdInt);
 				String curBite;
 				
-				// in data first string is column name and the others are  bytes.
+				//	if there is a page to add, add it
+				// in data, first string is column name, and the others string representing page data in bytes.
 				tableCols[pageColIndex].setText(pageId);	
 				for(int i = 0; i < BYTES_IN_PAGE; i++) {
 					curBite = dataIter.next();
@@ -490,7 +496,7 @@ public class MMUView extends java.util.Observable implements View {
 	}
 	
 	
-	private void updateFields() {		// Updating statistics fields
+	private void updateFields() {							// Updating statistics fields
 		
 		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
 			pageFaultText.setText(realPfAmount.toString());
@@ -498,7 +504,7 @@ public class MMUView extends java.util.Observable implements View {
 		}
 	}
 	
-	private void enablePlay(boolean flag) {		// Enable play and play all buttons
+	private void enablePlay(boolean flag) {					// Enable play and play all buttons
 		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
 			playButton.setEnabled(flag);
 			playAllButton.setEnabled(flag);
@@ -541,7 +547,8 @@ public class MMUView extends java.util.Observable implements View {
 		public ArrayList<List<String>> getTableInfo() {
 			return tableInfo;
 		}
-
+		
+		// read the current page table info and store it in a matrix.
 		public void setTableInfo(TableColumn[] tableCols, TableItem[] tableRows) {
 			for(int i=0; i<NUM_MMU_PAGES; i++) {
 				(tableInfo.get(i)).add(tableCols[i].getText());

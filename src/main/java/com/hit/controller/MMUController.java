@@ -5,6 +5,7 @@ import java.util.Observer;
 
 import com.hit.model.MMUModel;
 import com.hit.model.Model;
+import com.hit.util.MMULogger;
 import com.hit.view.MMUView;
 import com.hit.view.View;
 
@@ -24,9 +25,14 @@ public class MMUController extends Object implements Controller, Observer {
 			view.open();
 		}
 		if(o == view) {
-			model.readData();
-			((MMUView)view).addProcesses(((MMUModel)model).numProcesses);
-			((MMUView)view).setConfiguration(((MMUModel)model).getCommands());
+			if(((String)arg1).equals("Ready")) {
+				model.readData();
+				((MMUView)view).addProcesses(((MMUModel)model).numProcesses);
+				((MMUView)view).setConfiguration(((MMUModel)model).getCommands());
+			}
+			if(((String)arg1).equals("Done")) {
+				MMULogger.getInstance().close();
+			}
 		}
 		
 	}

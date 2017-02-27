@@ -77,7 +77,7 @@ public class Process implements Runnable{
 				while(pagesIter.hasNext() && dataIter.hasNext()) {
 					page = pagesIter.next();
 					data = dataIter.next();
-					if(page != null) {            // If algorithm extracts a page that was just requested to be inserted
+					if(page != null) {            // Check if algorithm extracts a page that was just requested to be inserted
 						
 						logger.write(MessageFormat.format("GP:P{0} {1} {2}{3}{3}", getId(), 
 																				   page.getPageId().toString(), 
@@ -86,6 +86,12 @@ public class Process implements Runnable{
 						if(data.length == 0) {				
 							page.setContent(data);
 						}
+					}
+					else {
+						logger.write(MessageFormat.format("Algorithm bug in process #{0} which asked MMU for pages {1},{2}" + 
+														  "while trying to get a page which is not in ram, algorithm decides to page out a page that was also requested by the process in the same getPages call.{2}", id, 
+														  																																							   pc.getPages(),
+																																																					   System.lineSeparator()), Level.SEVERE);
 					}
 				}
 			}
