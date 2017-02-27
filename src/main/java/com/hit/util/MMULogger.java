@@ -66,8 +66,10 @@ public class MMULogger {
 	}
 	
 	public void close() {
-		handler.close();
-		handler = null;
+		if(handler != null) {
+			handler.close();
+			handler = null;
+		}
 	}
 	
 	// Nested formatter class for handler.

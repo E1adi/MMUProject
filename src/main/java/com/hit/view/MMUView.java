@@ -271,14 +271,12 @@ public class MMUView extends java.util.Observable implements View {
 	    shell.forceFocus();
 
 		setChanged();
-		notifyObservers("Ready");
+		notifyObservers();
 		
 		while (!shell.isDisposed ()) {
 			if (!display.readAndDispatch ()) display.sleep ();
 		}
 		display.dispose ();
-		setChanged();
-		notifyObservers("Done");		
 	}
 
 	private void setPreConfiguration(List<String> commands) {				// common to reset button and setConfiguration method. reusing code.

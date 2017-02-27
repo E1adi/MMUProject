@@ -46,7 +46,8 @@ public class MMUModel extends Observable implements Model{
 		try {
 			commands = Files.readAllLines(Paths.get(MMULogger.DEFAULT_FILE_NAME));
 		} catch (IOException e) {
-			logger.write(e.getMessage(), Level.SEVERE);
+			MMULogger.getInstance().write(e.getMessage(), Level.SEVERE);
+			MMULogger.getInstance().close();
 		}
 	}
 
@@ -63,6 +64,9 @@ public class MMUModel extends Observable implements Model{
 		
 		runProcesses(processesList);
 		System.out.println("Done.");
+		
+		logger.close();
+		
 		setChanged();
 		notifyObservers(new Integer(numProcesses));
 	}

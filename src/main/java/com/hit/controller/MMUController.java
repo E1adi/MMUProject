@@ -25,16 +25,9 @@ public class MMUController extends Object implements Controller, Observer {
 			view.open();
 		}
 		if(o == view) {
-			if(((String)arg1).equals("Ready")) {
-				model.readData();
-				((MMUView)view).addProcesses(((MMUModel)model).numProcesses);
-				((MMUView)view).setConfiguration(((MMUModel)model).getCommands());
-			}
-			if(((String)arg1).equals("Done")) {
-				MMULogger.getInstance().close();
-			}
+			model.readData();
+			((MMUView)view).addProcesses(((MMUModel)model).numProcesses);
+			((MMUView)view).setConfiguration(((MMUModel)model).getCommands());
 		}
-		
 	}
-
 }
