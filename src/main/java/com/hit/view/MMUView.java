@@ -54,9 +54,9 @@ public class MMUView extends java.util.Observable implements View {
 	private TableColumn[] tableCols;
 	private TableItem[] tableRows;
 	private List<String> prCommands;
-	private List<Integer> memoryMap;
-	private List<Integer> lastMemoryMap;
-	private Stack<State> undoStack;
+	private List<Integer> memoryMap;			// Resemble the current RAM status (which pages are in RAM in each stage).
+	private List<Integer> lastMemoryMap;		// Resemble the last RAM status
+	private Stack<State> undoStack;				
 	private Stack<State> redoStack;
 	
 	public MMUView() {
