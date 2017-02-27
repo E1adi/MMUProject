@@ -1,5 +1,6 @@
 package com.hit.processes;
 
+import java.text.MessageFormat;
 import java.util.List;
 
 public class ProcessCycle {
@@ -58,6 +59,6 @@ public class ProcessCycle {
 	
 //	Overriding Object toString.
 	public String toString() {
-		return String.format("Requested pages: %s, Sleep time: %d, Data: %s", pages, sleepMs, data);
+		return MessageFormat.format("Requested pages: {0}, Sleep time: {1}, Data: {2}", pages, sleepMs, data);
 	}
 }

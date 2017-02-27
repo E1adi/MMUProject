@@ -84,13 +84,16 @@ public class MMUView extends java.util.Observable implements View {
 		shell.setBounds((screenSize.width/2) - (width/2), (screenSize.height/2) - (height/2), width, height);
 		shell.setText("MMU Simulator");
 		
+		
+		// Page table area (Container)
 		tableArea = new Composite(shell, SWT.NO_FOCUS);
 		gridData = new GridData(SWT.FILL, SWT.FILL, ALLOW_SPAN_HORIZONAL, ALLOW_SPAN_VERTICAL, 1, 2);
-		gridData.widthHint = (int)(width * (8.0/11));
+		gridData.widthHint = (int)(width * (8.0/11));  
 		gridData.heightHint = (int)(height * (4.0/6));
 		tableArea.setLayoutData(gridData);
 		tableArea.setLayout(new GridLayout(1, true));
 		
+		// Process selection area (Container)
 		processSelect = new Composite(shell, SWT.NO_FOCUS);
 		gridData = new GridData(SWT.FILL, SWT.FILL, ALLOW_SPAN_HORIZONAL, ALLOW_SPAN_VERTICAL, 1, 2);
 		gridData.widthHint = (int)(width * (3.0/11));
@@ -98,6 +101,8 @@ public class MMUView extends java.util.Observable implements View {
 		processSelect.setLayoutData(gridData);
 		processSelect.setLayout(new GridLayout(1, true));
 		
+		
+		// Buttons and statistics area (Container)
 		Operations = new Composite(shell, SWT.NO_FOCUS);
 		gridData = new GridData(SWT.FILL, SWT.FILL, ALLOW_SPAN_HORIZONAL, ALLOW_SPAN_VERTICAL, 2, 1);
 		gridData.widthHint = width;
@@ -112,7 +117,7 @@ public class MMUView extends java.util.Observable implements View {
 	    pageTable.setHeaderVisible(true);
 	     
 	    
-	    // Processes Select area components
+	    // Processes Selection area components
 	    Label processesLabel = new Label(processSelect, SWT.CENTER);
 	    processesLabel.setLayoutData(new GridData());
 	    processesLabel.setText("Processes:");
@@ -209,12 +214,14 @@ public class MMUView extends java.util.Observable implements View {
 	    	
 	    });
 	    
+	    
+	    // Events for pressing buttons and selecting processes.
 	    playButton.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event arg0) {
 				if(fowardStates.size() > 0) {
 					lastStates.push(saveState());
-					doLastStep(fowardStates.pop());
+					doASavedStateStep(fowardStates.pop());
 				}
 				else
 					oneStep();
@@ -227,7 +234,7 @@ public class MMUView extends java.util.Observable implements View {
 			public void handleEvent(Event arg0) {
 				while(fowardStates.size() > 0) {
 					lastStates.push(saveState());
-					doLastStep(fowardStates.pop());
+					doASavedStateStep(fowardStates.pop());
 				}
 				while(commandsIterator.hasNext()) {
 					oneStep();
@@ -249,7 +256,7 @@ public class MMUView extends java.util.Observable implements View {
 			@Override
 			public void handleEvent(Event arg0) {
 				fowardStates.push(saveState());
-				doLastStep(lastStates.pop());
+				doASavedStateStep(lastStates.pop());
 				enablePlay(true);
 				if(lastStates.size() == 0) {
 					enableStepBackAndReset(false);
@@ -258,7 +265,8 @@ public class MMUView extends java.util.Observable implements View {
 	    });
 	    
 	    shell.open ();
-		shell.setMinimized(false);
+	    shell.forceActive();
+	    shell.forceFocus();
 
 		setChanged();
 		notifyObservers();
@@ -270,7 +278,7 @@ public class MMUView extends java.util.Observable implements View {
 
 	}
 
-	private void setPreConfiguration(List<String> commands) {
+	private void setPreConfiguration(List<String> commands) {				// common to reset button and setConfiguration method. reusing code.
 		this.commands = commands;
 		commandsIterator = this.commands.iterator();
 		String command;
@@ -311,7 +319,7 @@ public class MMUView extends java.util.Observable implements View {
 		}
 	}
 	
-	private void doLastStep(State lastState) {	
+	private void doASavedStateStep(State lastState) {				// for displaying saved states.	
 			
 		List<List<String>> tableInfo = lastState.getTableInfo();
 		
@@ -339,7 +347,7 @@ public class MMUView extends java.util.Observable implements View {
 		enablePlay(true);
 	}
 	
-	private void clearAll() {
+	private void clearAll() {					// reset all flow data
 		pfAmount = 0;
 		realPfAmount = 0;
 		prAmount = 0;
@@ -361,7 +369,7 @@ public class MMUView extends java.util.Observable implements View {
 	}
 	
 	
-	private State saveState() {
+	private State saveState() {					// Save current state
 		State lastState = new State();
 		
 		lastState.setLastMemoryMap(lastMemoryMap);
@@ -375,7 +383,7 @@ public class MMUView extends java.util.Observable implements View {
 		return lastState;
 	}
 	
-	private void oneStep() {
+	private void oneStep() {					// Do one parsing step.
 		String curCommand;
 		String curProcess;
 		String pageId;
@@ -434,13 +442,14 @@ public class MMUView extends java.util.Observable implements View {
 		updateFields();
 	}
 
-	private void updateTable(List<String> data) {
+	private void updateTable(List<String> data) {				// Update table with a given new row.
 		
 		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
 			
 			Integer pagePos;
 			
-			if(lastMemoryMap.size() > 0) {
+			// Redraw table with new RAM memory map.
+			if(lastMemoryMap.size() > 0) {						
 				for(Integer pageId: memoryMap) {
 					pagePos = memoryMap.indexOf(pageId);
 					if(lastMemoryMap.contains(pageId)) {
@@ -453,7 +462,7 @@ public class MMUView extends java.util.Observable implements View {
 						}
 					}
 				}
-				for(int i = memoryMap.size(); i < NUM_MMU_PAGES; i++) {
+				for(int i = memoryMap.size(); i < NUM_MMU_PAGES; i++) {		
 					tableCols[i].setText("");
 					for(int j = 0; j < BYTES_IN_PAGE; j++) {
 						tableRows[j].setText(i, "");
@@ -470,7 +479,8 @@ public class MMUView extends java.util.Observable implements View {
 				Integer pageColIndex = memoryMap.indexOf(pageIdInt);
 				String curBite;
 				
-				tableCols[pageColIndex].setText(pageId);
+				// in data first string is column name and the others are  bytes.
+				tableCols[pageColIndex].setText(pageId);	
 				for(int i = 0; i < BYTES_IN_PAGE; i++) {
 					curBite = dataIter.next();
 					tableRows[i].setText(pageColIndex, curBite);
@@ -480,7 +490,7 @@ public class MMUView extends java.util.Observable implements View {
 	}
 	
 	
-	private void updateFields() {
+	private void updateFields() {		// Updating statistics fields
 		
 		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
 			pageFaultText.setText(realPfAmount.toString());
@@ -488,21 +498,21 @@ public class MMUView extends java.util.Observable implements View {
 		}
 	}
 	
-	private void enablePlay(boolean flag) {
+	private void enablePlay(boolean flag) {		// Enable play and play all buttons
 		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
 			playButton.setEnabled(flag);
 			playAllButton.setEnabled(flag);
 		}
 	}
 	
-	private void enableStepBackAndReset(boolean flag) {
+	private void enableStepBackAndReset(boolean flag) {		// enable step back and reset
 		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) { 
 			resetButton.setEnabled(flag);
 			stepBackButton.setEnabled(flag);
 		}
 	}
 	
-	public void addProcesses(Integer numOfProcess) {
+	public void addProcesses(Integer numOfProcess) {		// add process numbers to process selection list
 		if(shell.getDisplay() != null && !shell.getDisplay().isDisposed()) {
 			for(Integer i=0; i < numOfProcess; i++) {
 				processChoose.add("Process " + i.toString());
@@ -515,6 +525,8 @@ public class MMUView extends java.util.Observable implements View {
 		createAndShowGui();
 	}
 	
+	
+	// A class used to save States of running program.
 	private class State {
 		private List<String> prCommands;
 		private List<Integer> memoryMap;

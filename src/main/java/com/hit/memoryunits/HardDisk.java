@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.text.MessageFormat;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
@@ -23,11 +24,11 @@ public class HardDisk {
 	
 	@SuppressWarnings("unchecked")
 	private HardDisk() throws FileNotFoundException, IOException, ClassNotFoundException {
-		_SIZE = Constants.HardDiskSize;
-		DEFAULT_FILE_NAME = Constants.HardDiskDefaultFileName;
+		_SIZE = 1024;
+		DEFAULT_FILE_NAME = "./resources/HardDiskContent.txt";
 		File hdFile = new File(DEFAULT_FILE_NAME);
 		
-		if(hdFile.exists()) {
+		if(hdFile.exists()) {  
 			ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(DEFAULT_FILE_NAME));
 			try {
 				_hardDiskContent = (HashMap<Long, Page<byte[]>>)inputStream.readObject();
@@ -39,7 +40,6 @@ public class HardDisk {
 				inputStream.close();
 			}
 		}
-		
 		else {
 			hdFile.createNewFile();
 			_hardDiskContent = new HashMap<Long, Page<byte[]>>(_SIZE);
@@ -75,13 +75,15 @@ public class HardDisk {
                    	   											ClassNotFoundException {
 		
 		MMULogger logger = MMULogger.getInstance();
-		logger.write("PF:" + pageId.toString() + System.lineSeparator(), Level.INFO);
+		logger.write(MessageFormat.format("PF:{0}{1}", pageId.toString(), 
+													   System.lineSeparator()), Level.INFO);
 		
 		ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(DEFAULT_FILE_NAME));
 		try {
 			_hardDiskContent = (HashMap<java.lang.Long, Page<byte[]>>)inputStream.readObject();
 			return _hardDiskContent.get(pageId);
-		} catch (ClassNotFoundException CNF) {
+		} 
+		catch (ClassNotFoundException CNF) {		// HD file is corrupted
 			throw CNF;
 		}
 		finally {
@@ -104,12 +106,15 @@ public class HardDisk {
             															   java.io.IOException, ClassNotFoundException {
 		
 		MMULogger logger = MMULogger.getInstance();
-		logger.write("PR:MTH " + moveToHdPage.getPageId().toString() + " MTR " + moveToRamId.toString() + System.lineSeparator(), Level.INFO);
+		logger.write(MessageFormat.format("PR:MTH {0} MTR {1}{2}", moveToHdPage.getPageId().toString(),
+																   moveToRamId.toString(), 
+																   System.lineSeparator()), Level.INFO);
 		
 		ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(DEFAULT_FILE_NAME));
 		ObjectOutputStream outputStream = null;
 		
 		try {
+			_hardDiskContent.clear();
 			_hardDiskContent.putAll((Map<java.lang.Long, Page<byte[]>>)inputStream.readObject()); 
 			inputStream.close();
 			_hardDiskContent.put(moveToHdPage.getPageId(), moveToHdPage);
@@ -117,7 +122,7 @@ public class HardDisk {
 			outputStream.writeObject(_hardDiskContent);
 			outputStream.flush();
 		} 
-		catch (ClassNotFoundException CNF) {
+		catch (ClassNotFoundException CNF) {		// HD file is corrupted
 			throw CNF;
 		}
 		finally {

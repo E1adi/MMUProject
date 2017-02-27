@@ -15,6 +15,7 @@ public class MMUDriver {
 	public static void main(String[] args) 
 					 throws InterruptedException,
 							InvocationTargetException {
+		
 		CLI cli = new CLI(System.in, System.out);
 		String[] configuration;
 		
@@ -27,6 +28,5 @@ public class MMUDriver {
 			view.addObserver(controller);
 			model.start();
 		}
-
 	}
 }

@@ -17,7 +17,6 @@ import com.google.gson.Gson;
 import com.hit.algorithm.IAlgoCache;
 import com.hit.algorithm.LRUAlgoCacheImpl;
 import com.hit.algorithm.MFUAlgoCacheImpl;
-import com.hit.algorithm.MRUAlgoCacheImpl;
 import com.hit.algorithm.SecondChanceAlgoCacheImpl;
 import com.hit.memoryunits.MemoryManagementUnit;
 import com.hit.processes.Process;
@@ -38,7 +37,7 @@ public class MMUModel extends Observable implements Model{
 		IAlgoName = configuration[0];
 	}
 	
-	public List<String> getCommands(/*String processNumber*/) {
+	public List<String> getCommands() {
 		return commands;
 	}
 	
@@ -70,12 +69,13 @@ public class MMUModel extends Observable implements Model{
 	
 	private void runProcesses(List<Process> processesList) {
 		ExecutorService executor = Executors.newCachedThreadPool();
-				
+		
 		for(Process process: processesList) {
 			executor.execute(new Thread(process));
 		}
 		
 		executor.shutdown();
+		
 		try 
 		{
 			executor.awaitTermination(2, TimeUnit.MINUTES);
@@ -118,9 +118,6 @@ public class MMUModel extends Observable implements Model{
 		switch(algoName.toLowerCase()) {
 			case "lru": {
 				return new LRUAlgoCacheImpl<Long, Long>(capacity);			
-			}
-			case "mru": {
-				return new MRUAlgoCacheImpl<Long, Long>(capacity);			
 			}
 			case "mfu": {
 				return new MFUAlgoCacheImpl<Long, Long>(capacity);			

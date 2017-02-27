@@ -26,6 +26,6 @@ public class RunConfiguration {
 	@Override
 	public String toString()
 	{
-		return processesCycles.toArray().toString();
+		return processesCycles.toString();
 	}
 }

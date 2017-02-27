@@ -17,8 +17,8 @@ public class RAM {
 			_memory = new HashMap<Long,Page<byte[]>>(initialCapacity);
 		}
 		else {
-			_capacity = Constants.virtualMemoryDefaultSize;
-			_memory = new HashMap<Long,Page<byte[]>>(Constants.virtualMemoryDefaultSize);
+			_capacity = 5;
+			_memory = new HashMap<Long,Page<byte[]>>(_capacity);
 		}
 	}
 	
@@ -43,6 +43,7 @@ public class RAM {
 	@SuppressWarnings("unchecked")
 	public Page<byte[]>[] getPages(java.lang.Long[] pageIds) {
 		List<Page<byte[]>> returnValues = new LinkedList<Page<byte[]>>();
+		
 		for(Long id: pageIds) {
 			if(id != null) {
 				if(_memory.containsKey(id)) {
@@ -50,6 +51,7 @@ public class RAM {
 				}
 			}
 		}
+		
 		return (Page<byte[]>[]) returnValues.toArray();
 	}
 	
@@ -80,6 +82,7 @@ public class RAM {
 	
 	public void setInitialCapacity(int initialCapacity) {
 		Map<Long, Page<byte[]>> temp;
+		
 		if(initialCapacity >= 0) {
 			_capacity = initialCapacity;
 			temp = this.getPages();

@@ -1,6 +1,7 @@
 package com.hit.processes;
 
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -23,17 +24,11 @@ public class Process implements Runnable{
 //		mmu - reference to the MMU object.
 //		processCycles - process cycles configuration.
 	public Process(int id, 
-			MemoryManagementUnit mmu, 
-			ProcessCycles processCycles) {
+				   MemoryManagementUnit mmu, 
+				   ProcessCycles processCycles) {
+		
 		this.setId(id);
-		
-		if(mmu != null) {
-			this.mmu = mmu;
-		}
-		else {
-			this.mmu = new MemoryManagementUnit(0, null);
-		}
-		
+		this.mmu = mmu;
 		this.processCycles = processCycles;
 	}
 	
@@ -69,7 +64,7 @@ public class Process implements Runnable{
 			}
 			
 			
-			synchronized(mmu) {
+			synchronized(mmu) {   // Locking MMU
 				try {
 					pagesFromMemory = mmu.getPages(pc.getPages().toArray(new Long[1]), writePages);
 				} catch (ClassNotFoundException | IOException e1) {
@@ -82,20 +77,15 @@ public class Process implements Runnable{
 				while(pagesIter.hasNext() && dataIter.hasNext()) {
 					page = pagesIter.next();
 					data = dataIter.next();
-					if(data == null) {
-						logger.write("GP:P" + getId() + 
-									 " " + page.getPageId().toString() +
-									 " []" + 
-									 System.lineSeparator() +
-									 System.lineSeparator(), Level.INFO);
-					}
-					else {	
-						logger.write("GP:P" + getId() + 
-									 " " + page.getPageId().toString() +
-									 " " + Arrays.toString(data) + 
-									 System.lineSeparator() +
-									 System.lineSeparator(), Level.INFO);
-						page.setContent(data);
+					if(page != null) {            // If algorithm extracts a page that was just requested to be inserted
+						
+						logger.write(MessageFormat.format("GP:P{0} {1} {2}{3}{3}", getId(), 
+																				   page.getPageId().toString(), 
+																				   Arrays.toString(data), 
+																				   System.lineSeparator()), Level.INFO);
+						if(data.length == 0) {				
+							page.setContent(data);
+						}
 					}
 				}
 			}

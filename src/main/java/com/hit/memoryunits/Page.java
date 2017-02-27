@@ -1,5 +1,7 @@
 package com.hit.memoryunits;
 
+import java.util.Arrays;
+
 public class Page<T> implements java.io.Serializable {
 
 	private T _content;
@@ -29,23 +31,23 @@ public class Page<T> implements java.io.Serializable {
 		_content = content;
 	}
 	
-	public int hashCode() {
-		int result = 17;
-		result = (result * _id.intValue()) % Integer.MAX_VALUE;
-		return result;
+	public int hashCode() {		
+		return (17 * _id.intValue()) % Integer.MAX_VALUE;
 	}
 	
 	public boolean equals(java.lang.Object obj) {
 		if(obj == this) {
 			return true;
 		}
+		
 		if(obj instanceof Page<?>) {
 			return _id == ((Page<?>)obj).getPageId();
 		}
+		
 		return false;
 	}
 	
 	public java.lang.String toString() {
-		return String.format("Page ID: %s, Content: %s" , _id, _content);
+		return String.format("Page ID: %s, Content: %s" , _id, Arrays.asList(_content).toString());
 	}
 }
