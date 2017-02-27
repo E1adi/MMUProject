@@ -29,6 +29,12 @@ public class MemoryManagementUnit {
 	}
 	
 //	This method is the main method which returns array of pages that are requested from the user
+//	This method refers to pages for reading differently from pages for writing.
+//	Pages for reading would not be loaded to RAM (unless they are already in RAM), but will be loaded straight from HD. 
+//	(we are not going to change them so its OK to send a copy)  
+//	However,
+//	Pages for writing would first be loaded to RAM, and only then load them from RAM to return list.
+//
 //	Parameters:
 //		pageIds - array of page id's
 //	Returns:

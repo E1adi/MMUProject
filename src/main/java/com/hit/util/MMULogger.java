@@ -9,13 +9,21 @@ import java.util.logging.LogRecord;
 
 public class MMULogger {
 	public final static String DEFAULT_FILE_NAME = "./logs/log.txt";
-	private FileHandler handler;
+	private static FileHandler handler;
 	private static MMULogger _instance = null;
 	private static Object _lock = new Object();
+	private static Object _lock2 = new Object();
+	private static OnlyMessageFormatter formatter;
 	
 	
 	// Private default constructor for creating a handler and setting the handler format.
 	private MMULogger() {
+		formatter = new OnlyMessageFormatter();
+		setHandler();
+	}
+	
+	
+	private  static void setHandler() {
 		try {
 			File logFile = new File(DEFAULT_FILE_NAME);
 			if(logFile.exists()) {
@@ -25,8 +33,9 @@ public class MMULogger {
 		} catch (SecurityException | IOException e) {
 			e.printStackTrace();
 		}
-		handler.setFormatter(new OnlyMessageFormatter());
+		handler.setFormatter(formatter);
 	}
+	
 	
 	// getInstance method for implementing single tone pattern.
 	// Return:
@@ -37,6 +46,13 @@ public class MMULogger {
 			synchronized(_lock) {
 				if(_instance == null) {
 					_instance = new MMULogger();
+				}
+			}
+		}
+		if(handler == null) {
+			synchronized(_lock2) {
+				if(handler == null) {					
+					setHandler();
 				}
 			}
 		}
@@ -51,7 +67,7 @@ public class MMULogger {
 	
 	public void close() {
 		handler.close();
-//		_instance = null;
+		handler = null;
 	}
 	
 	// Nested formatter class for handler.

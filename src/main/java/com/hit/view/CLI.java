@@ -4,7 +4,6 @@ package com.hit.view;
 import java.io.PrintWriter;
 import java.util.Scanner;
 
-import com.hit.util.MMULogger;
 
 public class CLI {
 
@@ -32,7 +31,6 @@ public class CLI {
 		while(!userInput.toLowerCase().equals("start")) {
 			if(userInput.toLowerCase().equals("stop")) {				// Typed stop
 				write("Thank you.");
-				MMULogger.getInstance().close();
 				return null;
 			}
 			else { 														// Typed something which is not start or stop
