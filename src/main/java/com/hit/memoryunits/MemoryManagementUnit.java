@@ -78,6 +78,7 @@ public class MemoryManagementUnit {
 					pagesForWritingThatMissingInRam.add(curRequestedPage);
 				}
 			}
+			readWriteIndex++;
 		}
 		
 		if(pagesForWritingThatMissingInRam.size() > 0) {															// If there are Pages for writing that are missing in RAM
